@@ -29,15 +29,35 @@
   html{-webkit-text-size-adjust:100%}
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
   a{color:inherit}
-  .wrap{max-width:720px;margin:0 auto;padding:0 16px 64px}
+  .wrap{max-width:720px;margin:0 auto;padding:0 16px 10px}
   header.top{padding:30px 0 18px;display:flex;align-items:flex-start;justify-content:space-between;gap:40px;border-bottom:2px solid var(--ink)}
   .brand{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.01em;line-height:1}
   .brand small{display:block;font-family:var(--body);font-weight:500;font-size:12px;letter-spacing:.05em;line-height:1.6;text-transform:uppercase;color:var(--ash);margin-top:10px;max-width:46ch}
-  .stamp{font-family:var(--mono);font-size:11px;color:var(--ash);text-align:right;line-height:1.8;white-space:nowrap;padding-top:38px;flex-shrink:0}
+  .stamp{margin-top:4px}
+  .srow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .srow:last-of-type{border-bottom:0}
+  .sname{font-size:14px;font-weight:600;letter-spacing:.01em}
+  .sval{font-family:var(--mono);font-size:12px;color:var(--ash);white-space:nowrap}
+  /* grades scale */
+  .grades{margin-top:4px}
+  .grow{display:grid;grid-template-columns:128px 1fr 58px;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .grow:last-of-type{border-bottom:0}
+  .gname{font-size:14px;font-weight:600;letter-spacing:.01em}
+  .gtrack{position:relative;display:block;height:6px;border-radius:3px;background:rgba(17,17,17,.07)}
+  .gtrack i{position:absolute;top:0;bottom:0;min-width:6px;border-radius:3px;background:var(--ink)}
+  .gpct{font-family:var(--mono);font-size:11px;color:var(--ash);text-align:right;white-space:nowrap}
+  .gscale{display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ash)}
+  @media (max-width:420px){
+    .grow{grid-template-columns:104px 1fr 50px;gap:10px}
+    .gname{font-size:13px}
+  }
   .stamp b{color:var(--brick);font-weight:600}
   .live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#2f9e4f;margin-right:6px;vertical-align:1px;animation:livepulse 2.6s ease-in-out infinite}
   @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(47,158,79,.45)}60%{box-shadow:0 0 0 6px rgba(47,158,79,0)}100%{box-shadow:0 0 0 0 rgba(47,158,79,0)}}
   @media (prefers-reduced-motion: reduce){.live{animation:none}}
+  @media (max-width:380px){
+    .stamp{font-size:11px}
+  }
   /* tabs */
   nav.tabs{position:sticky;top:0;z-index:20;background:var(--paper);display:flex;gap:0;border-bottom:1px solid var(--line);margin:0 -16px;padding:0 16px}
   nav.tabs a{flex:1;text-align:center;text-decoration:none;font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.06em;text-transform:uppercase;padding:12px 4px 10px;color:var(--ash);border-bottom:3px solid transparent;margin-bottom:-1px}
@@ -114,7 +134,8 @@
   .more{display:block;width:100%;margin-top:10px;font:600 13px var(--body);padding:10px;border:1px solid var(--ink);background:#fff;border-radius:4px;cursor:pointer}
   .method p{margin:8px 0;font-size:14px}
   .method b{font-weight:600}
-  footer{margin-top:40px;font-size:12px;color:var(--ash);border-top:1px solid var(--line);padding-top:12px}
+  footer{margin-top:16px;font-size:12px;color:var(--ash);border-top:1px solid var(--line);padding-top:10px}
+  @media (min-width:640px){footer{white-space:nowrap}}
   /* near me */
   .locbar{display:flex;gap:8px;margin-top:8px}
   .locbar input{flex:1;font:15px var(--body);padding:11px 12px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);min-width:0}
@@ -191,7 +212,6 @@
 <div class="wrap">
   <header class="top">
     <div class="brand">portnoy<span style="color:var(--brick)">.</span>pizza<small>The Portnoy Score Index · what a Dave Portnoy pizza score is really worth</small></div>
-    <div class="stamp" id="stamp"></div>
   </header>
   <nav class="tabs" id="tabs">
     <a href="#index" data-view="index" class="active">The index</a>
@@ -258,14 +278,32 @@
     <p class="tr-note">"Pct then" is the score's percentile within its own calendar year. "Today's terms" is the score at that same percentile in the last 12 months. Badges: <span class="badge">protest</span> below 1.0, excluded from calibration · <span class="badge grey">archival</span> retro-logged 2013–15, excluded · <span class="badge grey">unresolved</span> venue record missing upstream, score counted.</p>
   </section>
 
+  <section>
+    <h2>Live stats</h2>
+    <div class="stamp" id="stamp"></div>
+  </section>
+
+  <section>
+    <h2>Grades</h2>
+    <div class="grades">
+      <div class="grow"><span class="gname">Rarefied air</span><span class="gtrack"><i style="left:97%;right:0;background:var(--brick)"></i></span><span class="gpct">97+</span></div>
+      <div class="grow"><span class="gname">Elite</span><span class="gtrack"><i style="left:90%;right:3%;opacity:.92"></i></span><span class="gpct">90–97</span></div>
+      <div class="grow"><span class="gname">Great</span><span class="gtrack"><i style="left:75%;right:10%;opacity:.78"></i></span><span class="gpct">75–90</span></div>
+      <div class="grow"><span class="gname">Above average</span><span class="gtrack"><i style="left:55%;right:25%;opacity:.62"></i></span><span class="gpct">55–75</span></div>
+      <div class="grow"><span class="gname">Average</span><span class="gtrack"><i style="left:40%;right:45%;opacity:.48"></i></span><span class="gpct">40–55</span></div>
+      <div class="grow"><span class="gname">Below average</span><span class="gtrack"><i style="left:25%;right:60%;opacity:.36"></i></span><span class="gpct">25–40</span></div>
+      <div class="grow"><span class="gname">Poor</span><span class="gtrack"><i style="left:10%;right:75%;opacity:.26"></i></span><span class="gpct">10–25</span></div>
+      <div class="grow"><span class="gname">Bad</span><span class="gtrack"><i style="left:0;right:90%;opacity:.18"></i></span><span class="gpct">&lt;10</span></div>
+      <div class="gscale" aria-hidden="true"><span>0</span><span>percentile of his last 12 months of scores</span><span>100</span></div>
+    </div>
+  </section>
+
   <section class="method">
     <h2>Method</h2>
-    <p><b>Source.</b> Every review on Dave's One Bite account, pulled from the app's own backend and reconciled against the website: <span id="mCounts"></span>. Refreshed automatically after each new score.</p>
+    <p hidden><span id="mCounts"></span></p>
     <p><b>Calibration set.</b> All scores except protest scores below 1.0 and the 14 retro-logged reviews dated 2013–2015. Everything is computed from this set; the excluded records still appear in the ledger with a badge.</p>
     <p><b>Percentile now.</b> Rank of a score within the trailing 365 days of calibration scores (mid-rank on ties).</p>
     <p><b>Year equivalents.</b> Quantile mapping: take the score's percentile now, return the score at that same percentile in the target year, interpolated. It corrects for the average and the spread at once — which matters, because his top decile has held at 8.1 for years while his floor rose from 3.9 to 6.8.</p>
-    <p><b>Grades.</b> Rarefied air ≥97 · Elite 90 · Great 75 · Above average 55 · Average 40 · Below average 25 · Poor 10 · Bad below.</p>
-    <p class="muted" style="font-size:12px">Prototype v1.2 · Not affiliated with Barstool Sports or One Bite. Scores are Dave Portnoy's; the arithmetic is ours. Every review links back to its original.</p>
   </section>
   </div>
 
@@ -304,7 +342,7 @@
   </section>
   </div>
 
-  <footer>portnoy.pizza · The Portnoy Score Index · methodology v1.2 · data as of <span id="footDate"></span> · onebitescores.com forwards here · not affiliated with Barstool Sports or the One Bite app</footer>
+  <footer>The Portnoy Score Index · Not affiliated with Dave Portnoy (but we want to be, hit us up), Barstool Sports, or the One Bite app.<span id="footDate" hidden></span></footer>
 </div>
 
 <script id="psi-data" type="application/json"></script>
@@ -353,8 +391,12 @@
 
   // ---- header stamp ----
   const ago = STATUS && STATUS.checked_at ? Math.max(0, Math.round((Date.now()-new Date(STATUS.checked_at).getTime())/60000)) : null;
-  const agoTxt = (ago==null || ago<1) ? 'checked just now' : ago<60 ? `checked ${ago} min ago` : `checked ${Math.round(ago/60)} hr ago`;
-  document.getElementById('stamp').innerHTML = `<span class="live"></span>live · ${agoTxt}<br>last score ${D.latest.date} · <b>${D.counts.archive.toLocaleString()}</b> reviews on record`;
+  const agoTxt = (ago==null || ago<1) ? 'just now' : ago<60 ? `${ago} min ago` : `${Math.round(ago/60)} hr ago`;
+  document.getElementById('stamp').innerHTML =
+    `<div class="srow"><span class="sname">Status</span><span class="sval"><span class="live"></span>live</span></div>` +
+    `<div class="srow"><span class="sname">Last checked</span><span class="sval">${agoTxt}</span></div>` +
+    `<div class="srow"><span class="sname">Last score</span><span class="sval">${D.latest.date}</span></div>` +
+    `<div class="srow"><span class="sname">Reviews on record</span><span class="sval"><b>${D.counts.archive.toLocaleString()}</b></span></div>`;
   document.getElementById('footDate').textContent = D.as_of;
   document.getElementById('mCounts').textContent = `${D.counts.archive.toLocaleString()} reviews from ${D.counts.first_date} to ${D.counts.last_date}, ${D.counts.calibration.toLocaleString()} in the calibration set`;
 
