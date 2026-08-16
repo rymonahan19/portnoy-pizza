@@ -11,8 +11,8 @@ Independent, continuously updated index of Dave Portnoy's pizza scores. See `SPE
 - `site/index.html` — the front end (prototype build; embed-free production version loads `/data/*`).
 
 ## Cloudflare resources (already created on 2026-08-16)
-- KV namespace **psi-data** — id `b90a2a5a7fbf44b5ac1af0b6d0fc00ac` (bound as `PSI_DATA`)
-- D1 database **psi** — id `dd27023a-5b94-4a34-bd4c-d08d520336d8`, region ENAM (bound as `PSI_DB`); tables `reviews`, `blobs`, `changelog` created; first workflow run loads all rows via `out/seed.sql`
+- KV namespace **psi-data** — id `1b126b76c84a457ba661f12b3ce936ac` (bound as `PSI_DATA`)
+- D1 database **psi** — id `7519813c-f895-4fe7-897f-13cac5ca31fd`, region ENAM (bound as `PSI_DB`); tables `reviews`, `blobs`, `changelog` created; first workflow run loads all rows via `out/seed.sql`
 - R2 bucket **psi-backups** — *not yet*: enable R2 in the dashboard (R2 → Get started; free tier) then `wrangler r2 bucket create psi-backups`. Until then the backup step logs a note and continues.
 
 ## One-time setup (≈20 minutes)
