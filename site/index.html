@@ -30,12 +30,14 @@
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
   a{color:inherit}
   .wrap{max-width:720px;margin:0 auto;padding:0 16px 64px}
-  header.top{padding:22px 0 10px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink)}
+  header.top{padding:30px 0 18px;display:flex;align-items:flex-start;justify-content:space-between;gap:40px;border-bottom:2px solid var(--ink)}
   .brand{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.01em;line-height:1}
-  .brand small{display:block;font-family:var(--body);font-weight:500;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ash);margin-top:6px}
-  .stamp{font-family:var(--mono);font-size:11px;color:var(--ash);text-align:right;line-height:1.35}
+  .brand small{display:block;font-family:var(--body);font-weight:500;font-size:12px;letter-spacing:.05em;line-height:1.6;text-transform:uppercase;color:var(--ash);margin-top:10px;max-width:46ch}
+  .stamp{font-family:var(--mono);font-size:11px;color:var(--ash);text-align:right;line-height:1.8;white-space:nowrap;padding-top:38px;flex-shrink:0}
   .stamp b{color:var(--brick);font-weight:600}
-  .live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--brick);margin-right:5px;vertical-align:1px}
+  .live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#2f9e4f;margin-right:6px;vertical-align:1px;animation:livepulse 2.6s ease-in-out infinite}
+  @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(47,158,79,.45)}60%{box-shadow:0 0 0 6px rgba(47,158,79,0)}100%{box-shadow:0 0 0 0 rgba(47,158,79,0)}}
+  @media (prefers-reduced-motion: reduce){.live{animation:none}}
   /* tabs */
   nav.tabs{position:sticky;top:0;z-index:20;background:var(--paper);display:flex;gap:0;border-bottom:1px solid var(--line);margin:0 -16px;padding:0 16px}
   nav.tabs a{flex:1;text-align:center;text-decoration:none;font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.06em;text-transform:uppercase;padding:12px 4px 10px;color:var(--ash);border-bottom:3px solid transparent;margin-bottom:-1px}
@@ -351,7 +353,8 @@
 
   // ---- header stamp ----
   const ago = STATUS && STATUS.checked_at ? Math.max(0, Math.round((Date.now()-new Date(STATUS.checked_at).getTime())/60000)) : null;
-  document.getElementById('stamp').innerHTML = `<span class="live"></span>${ago==null?'live · checked just now':(ago<1?'live · checked just now':`live · checked ${ago} min ago`)}<br>last score ${D.latest.date}<br><b>${D.counts.archive.toLocaleString()}</b> reviews on record`;
+  const agoTxt = (ago==null || ago<1) ? 'checked just now' : ago<60 ? `checked ${ago} min ago` : `checked ${Math.round(ago/60)} hr ago`;
+  document.getElementById('stamp').innerHTML = `<span class="live"></span>live · ${agoTxt}<br>last score ${D.latest.date} · <b>${D.counts.archive.toLocaleString()}</b> reviews on record`;
   document.getElementById('footDate').textContent = D.as_of;
   document.getElementById('mCounts').textContent = `${D.counts.archive.toLocaleString()} reviews from ${D.counts.first_date} to ${D.counts.last_date}, ${D.counts.calibration.toLocaleString()} in the calibration set`;
 
