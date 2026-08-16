@@ -234,15 +234,15 @@
     <div class="tagline">What a Dave Portnoy pizza score is <b>really</b> worth.</div>
   </header>
   <nav class="tabs" id="tabs">
-    <a href="#reviews" data-view="reviews">All reviews</a>
+    <a href="#reviews" data-view="reviews" class="active">All reviews</a>
     <a href="#leaderboard" data-view="leaderboard">Leaderboard</a>
-    <a href="#index" data-view="index" class="active">The index</a>
+    <a href="#index" data-view="index">The index</a>
     <a href="#nearby" data-view="nearby">Near me</a>
     <a href="#grades" data-view="grades">Grade scale</a>
   </nav>
 
   <!-- ============ VIEW: INDEX ============ -->
-  <div class="view active" id="view-index">
+  <div class="view" id="view-index">
   <section>
     <div class="verdict" id="verdict"></div>
     <p class="lede" id="lede"></p>
@@ -344,7 +344,7 @@
   </div>
 
   <!-- ============ VIEW: ALL REVIEWS ============ -->
-  <div class="view" id="view-reviews">
+  <div class="view active" id="view-reviews">
   <section>
     <div class="verdict" id="verdict2"></div>
   </section>
@@ -431,7 +431,7 @@
   const tabs = document.querySelectorAll('#tabs a');
   function show(view){ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+view)); tabs.forEach(t=>t.classList.toggle('active', t.dataset.view===view)); if(view==='nearby') setTimeout(nearInit,0); if(view==='leaderboard') lbInit(); try{window.scrollTo({top:0});}catch(e){} }
   tabs.forEach(t=>t.addEventListener('click', e=>{ e.preventDefault(); history.replaceState(null,'','#'+t.dataset.view); show(t.dataset.view); }));
-  window.addEventListener('hashchange', ()=>{ const v=(location.hash||'#index').slice(1); if(['index','nearby','leaderboard','reviews','grades'].includes(v)) show(v); });
+  window.addEventListener('hashchange', ()=>{ const v=(location.hash||'#reviews').slice(1); if(['index','nearby','leaderboard','reviews','grades'].includes(v)) show(v); });
 
   // ---- header stamp ----
   const ago = STATUS && STATUS.checked_at ? Math.max(0, Math.round((Date.now()-new Date(STATUS.checked_at).getTime())/60000)) : null;
@@ -697,7 +697,7 @@
   }
 
   // initial route
-  const v0=(location.hash||'#index').slice(1); if(['nearby','leaderboard','reviews','grades'].includes(v0)) show(v0);
+  const v0=(location.hash||'#reviews').slice(1); if(['index','nearby','leaderboard','grades'].includes(v0)) show(v0);
 })();
 </script>
 </body>
