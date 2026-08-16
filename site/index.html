@@ -69,7 +69,10 @@
   nav.tabs{position:sticky;top:0;z-index:20;background:var(--paper);display:flex;gap:0;border-bottom:1px solid var(--line);margin:0 -16px;padding:0 16px}
   nav.tabs a{flex:1;text-align:center;text-decoration:none;font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.06em;text-transform:uppercase;padding:12px 4px 10px;color:var(--ash);border-bottom:3px solid transparent;margin-bottom:-1px}
   nav.tabs a.active{color:var(--ink);border-bottom-color:var(--brick)}
-  @media (max-width:600px){nav.tabs a{font-size:12px;letter-spacing:.04em;padding:12px 2px 10px}}
+  @media (max-width:640px){
+    nav.tabs{justify-content:space-between}
+    nav.tabs a{flex:0 1 auto;font-size:11px;letter-spacing:.03em;padding:12px 0 10px}
+  }
   .view{display:none}.view.active{display:block}
   section{margin-top:28px}
   h2{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--ash);margin:0 0 10px;display:flex;align-items:center;gap:10px}
@@ -225,9 +228,10 @@
   </header>
   <nav class="tabs" id="tabs">
     <a href="#index" data-view="index" class="active">The index</a>
-    <a href="#nearby" data-view="nearby">Near me</a>
+    <a href="#reviews" data-view="reviews">All reviews</a>
     <a href="#leaderboard" data-view="leaderboard">Leaderboard</a>
-    <a href="#grades" data-view="grades">Grades guide</a>
+    <a href="#nearby" data-view="nearby">Near me</a>
+    <a href="#grades" data-view="grades">Grade scale</a>
   </nav>
 
   <!-- ============ VIEW: INDEX ============ -->
@@ -282,22 +286,6 @@
     </div>
   </section>
 
-  <section>
-    <h2>All reviews</h2>
-    <div class="tablewrap"><table id="ledger"><thead><tr><th>Review</th><th>Score</th><th>Pct then</th><th>Today's terms</th></tr></thead><tbody></tbody></table></div>
-    <button class="more" id="more">Show 50 more</button>
-  </section>
-
-  <section>
-    <h2>Ledger key</h2>
-    <div class="lkey">
-      <div class="krow"><span class="kname">Pct then</span><span class="kdef">The score's percentile within its own calendar year.</span></div>
-      <div class="krow"><span class="kname">Today's terms</span><span class="kdef">The score at that same percentile in the last 12 months.</span></div>
-      <div class="krow"><span class="kname"><span class="badge">protest</span></span><span class="kdef">Below 1.0 — excluded from calibration.</span></div>
-      <div class="krow"><span class="kname"><span class="badge grey">archival</span></span><span class="kdef">Retro-logged 2013–15 — excluded.</span></div>
-      <div class="krow"><span class="kname"><span class="badge grey">unresolved</span></span><span class="kdef">Venue record missing upstream — score counted.</span></div>
-    </div>
-  </section>
 
   <section>
     <h2>Live stats</h2>
@@ -345,6 +333,26 @@
     <div class="ten" id="ten"></div>
     <div class="lb" id="lb"></div>
     <p class="tr-note" id="lbNote"></p>
+  </section>
+  </div>
+
+  <!-- ============ VIEW: ALL REVIEWS ============ -->
+  <div class="view" id="view-reviews">
+  <section>
+    <h2>All reviews</h2>
+    <div class="tablewrap"><table id="ledger"><thead><tr><th>Review</th><th>Score</th><th>Pct then</th><th>Today's terms</th></tr></thead><tbody></tbody></table></div>
+    <button class="more" id="more">Show 50 more</button>
+  </section>
+
+  <section>
+    <h2>Ledger key</h2>
+    <div class="lkey">
+      <div class="krow"><span class="kname">Pct then</span><span class="kdef">The score's percentile within its own calendar year.</span></div>
+      <div class="krow"><span class="kname">Today's terms</span><span class="kdef">The score at that same percentile in the last 12 months.</span></div>
+      <div class="krow"><span class="kname"><span class="badge">protest</span></span><span class="kdef">Below 1.0 — excluded from calibration.</span></div>
+      <div class="krow"><span class="kname"><span class="badge grey">archival</span></span><span class="kdef">Retro-logged 2013–15 — excluded.</span></div>
+      <div class="krow"><span class="kname"><span class="badge grey">unresolved</span></span><span class="kdef">Venue record missing upstream — score counted.</span></div>
+    </div>
   </section>
   </div>
 
@@ -411,7 +419,7 @@
   const tabs = document.querySelectorAll('#tabs a');
   function show(view){ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+view)); tabs.forEach(t=>t.classList.toggle('active', t.dataset.view===view)); if(view==='nearby') setTimeout(nearInit,0); if(view==='leaderboard') lbInit(); try{window.scrollTo({top:0});}catch(e){} }
   tabs.forEach(t=>t.addEventListener('click', e=>{ e.preventDefault(); history.replaceState(null,'','#'+t.dataset.view); show(t.dataset.view); }));
-  window.addEventListener('hashchange', ()=>{ const v=(location.hash||'#index').slice(1); if(['index','nearby','leaderboard','grades'].includes(v)) show(v); });
+  window.addEventListener('hashchange', ()=>{ const v=(location.hash||'#index').slice(1); if(['index','nearby','leaderboard','reviews','grades'].includes(v)) show(v); });
 
   // ---- header stamp ----
   const ago = STATUS && STATUS.checked_at ? Math.max(0, Math.round((Date.now()-new Date(STATUS.checked_at).getTime())/60000)) : null;
@@ -675,7 +683,7 @@
   }
 
   // initial route
-  const v0=(location.hash||'#index').slice(1); if(['nearby','leaderboard','grades'].includes(v0)) show(v0);
+  const v0=(location.hash||'#index').slice(1); if(['nearby','leaderboard','reviews','grades'].includes(v0)) show(v0);
 })();
 </script>
 </body>
