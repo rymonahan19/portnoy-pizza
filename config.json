@@ -1,0 +1,43 @@
+{
+ "protest_ceiling": 1.0,
+ "era_start": "2016-01-01",
+ "window_days": 365,
+ "roll_n": 200,
+ "base_year": 2019,
+ "grades": [
+  [
+   97,
+   "Rarefied air"
+  ],
+  [
+   90,
+   "Elite"
+  ],
+  [
+   75,
+   "Great"
+  ],
+  [
+   55,
+   "Above average"
+  ],
+  [
+   40,
+   "Average"
+  ],
+  [
+   25,
+   "Below average"
+  ],
+  [
+   10,
+   "Poor"
+  ],
+  [
+   0,
+   "Bad"
+  ]
+ ],
+ "methodology_version": "1.2",
+ "site": "https://portnoy.pizza"
+}

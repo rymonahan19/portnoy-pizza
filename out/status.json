@@ -1,0 +1,10 @@
+{
+ "checked_at": "2026-08-16T00:25:34.792670Z",
+ "ok": true,
+ "message": "seed test",
+ "source": "api",
+ "archive_count": 2150,
+ "last_score_date": "2026-08-13",
+ "changed": 0,
+ "stale": false
+}

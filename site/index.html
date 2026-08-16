@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>portnoy.pizza — Is that a good Dave Portnoy pizza score? The Portnoy Score Index</title>
+<meta name="description" content="Every Dave Portnoy pizza score, ranked and era-adjusted. See where today's score sits in the last 12 months, what it would have been in any past year, scores near you, and the all-time leaderboard.">
+<link rel="canonical" href="https://portnoy.pizza/">
+<meta name="robots" content="noindex,follow">
+<meta property="og:site_name" content="portnoy.pizza">
+<meta property="og:title" content="Is that a good Dave Portnoy pizza score? — Portnoy Score Index">
+<meta property="og:description" content="Every score he has ever given, translated across eras. Percentile now, equivalent in any year, scores near you, all-time leaderboard.">
+<meta property="og:url" content="https://portnoy.pizza/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"portnoy.pizza — Portnoy Score Index","url":"https://portnoy.pizza/","description":"An independent index of Dave Portnoy's pizza review scores: percentile, era-adjusted equivalents, map, and all-time leaderboard.","potentialAction":{"@type":"SearchAction","target":"https://portnoy.pizza/#nearby?q={search_term_string}","query-input":"required name=search_term_string"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root{
+    --paper:#EEEFEA; --panel:#FFFFFF; --ink:#17181A; --ash:#6B7075; --line:#D6D9D1;
+    --brick:#A6231A; --brick-soft:#F3DDD9; --band:#CBD0C4; --band-strong:#8E968A; --gold:#B08D3A; --gold-soft:#F1E7CF;
+    --display:"Barlow Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+    --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+  a{color:inherit}
+  .wrap{max-width:720px;margin:0 auto;padding:0 16px 64px}
+  header.top{padding:22px 0 10px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink)}
+  .brand{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.01em;line-height:1}
+  .brand small{display:block;font-family:var(--body);font-weight:500;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ash);margin-top:6px}
+  .stamp{font-family:var(--mono);font-size:11px;color:var(--ash);text-align:right;line-height:1.35}
+  .stamp b{color:var(--brick);font-weight:600}
+  .live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--brick);margin-right:5px;vertical-align:1px}
+  /* tabs */
+  nav.tabs{position:sticky;top:0;z-index:20;background:var(--paper);display:flex;gap:0;border-bottom:1px solid var(--line);margin:0 -16px;padding:0 16px}
+  nav.tabs a{flex:1;text-align:center;text-decoration:none;font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.06em;text-transform:uppercase;padding:12px 4px 10px;color:var(--ash);border-bottom:3px solid transparent;margin-bottom:-1px}
+  nav.tabs a.active{color:var(--ink);border-bottom-color:var(--brick)}
+  .view{display:none}.view.active{display:block}
+  section{margin-top:28px}
+  h2{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--ash);margin:0 0 10px;display:flex;align-items:center;gap:10px}
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  p.lede{margin:14px 0 0;color:var(--ink);font-size:16px}
+  .muted{color:var(--ash)}
+  /* verdict */
+  .verdict{background:var(--ink);color:#fff;border-radius:6px;padding:20px 20px 18px;position:relative;overflow:hidden}
+  .verdict .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#B9BDB6}
+  .verdict .row{display:flex;align-items:flex-end;gap:18px;margin-top:6px}
+  .verdict .score{font-family:var(--display);font-weight:800;font-size:96px;line-height:.85;letter-spacing:-.02em}
+  .verdict .venue{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.05;padding-bottom:6px}
+  .verdict .venue span{display:block;font-family:var(--body);font-weight:400;font-size:13px;color:#B9BDB6;margin-top:4px}
+  .verdict .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid #35383B}
+  .fact b{display:block;font-family:var(--display);font-weight:700;font-size:28px;line-height:1}
+  .fact span{font-size:11px;color:#B9BDB6;text-transform:uppercase;letter-spacing:.06em}
+  .grade{display:inline-block;background:var(--brick);color:#fff;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:3px;margin-top:10px}
+  .verdict .line{margin:14px 0 0;font-size:15px;color:#E9EBE6}
+  /* translator */
+  .translator{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px 16px 16px}
+  .tr-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+  .tr-score{font-family:var(--display);font-weight:800;font-size:72px;line-height:.9;letter-spacing:-.02em;min-width:120px}
+  .tr-score input{font:inherit;width:2.4ch;border:0;border-bottom:3px solid var(--brick);background:transparent;color:var(--ink);padding:0;outline:none;text-align:left}
+  .tr-score input:focus{border-bottom-color:var(--ink)}
+  .tr-read{text-align:right}
+  .tr-read .pct{font-family:var(--display);font-weight:700;font-size:34px;line-height:1}
+  .tr-read .pct small{font-size:16px;color:var(--ash);font-weight:500}
+  .tr-read .g{margin-top:6px}
+  .rail{position:relative;margin:18px 0 6px;height:64px}
+  .rail svg{width:100%;height:64px;display:block;overflow:visible}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin:0;position:absolute;left:0;top:34px;cursor:pointer}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--ink)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--brick);border:3px solid #fff;box-shadow:0 0 0 1px var(--ink);margin-top:-12px}
+  input[type=range]::-moz-range-track{height:2px;background:var(--ink)}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--brick);border:3px solid #fff;box-shadow:0 0 0 1px var(--ink)}
+  input[type=range]:focus-visible{outline:2px solid var(--brick);outline-offset:8px}
+  .ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--ash);margin-top:2px}
+  .equiv{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}
+  .eq{background:var(--paper);border-radius:4px;padding:8px 6px;text-align:center}
+  .eq b{display:block;font-family:var(--display);font-weight:700;font-size:24px;line-height:1}
+  .eq span{font-family:var(--mono);font-size:10px;color:var(--ash)}
+  .eq.base{outline:2px solid var(--brick);outline-offset:-2px}
+  .tr-note{margin:12px 0 0;font-size:13px;color:var(--ash)}
+  .tr-note b{color:var(--ink);font-weight:600}
+  .quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .quick button,.chips button{font:600 12px var(--mono);border:1px solid var(--line);background:#fff;border-radius:3px;padding:5px 8px;cursor:pointer;color:var(--ink)}
+  .quick button:hover,.chips button:hover{border-color:var(--ink)}
+  /* charts */
+  .chart{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 10px 8px}
+  .chart svg{width:100%;height:auto;display:block}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;font-family:var(--mono);font-size:11px;color:var(--ash);margin:8px 6px 0}
+  .legend i{display:inline-block;width:14px;height:8px;vertical-align:-1px;margin-right:5px;border-radius:1px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 10px}
+  .kpi b{display:block;font-family:var(--display);font-weight:800;font-size:34px;line-height:1}
+  .kpi span{font-size:11px;color:var(--ash);text-transform:uppercase;letter-spacing:.06em}
+  .kpi.brick{background:var(--brick);border-color:var(--brick);color:#fff}
+  .kpi.brick span{color:#F5D9D5}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-family:var(--mono);font-weight:600;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ash);text-align:right;padding:6px 6px;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono);font-size:12px;white-space:nowrap}
+  td.name{font-family:var(--body);font-size:13px;white-space:normal;text-align:left}
+  td.name span{display:block;color:var(--ash);font-size:11px}
+  td .s{font-family:var(--display);font-weight:700;font-size:18px}
+  .badge{display:inline-block;font:600 9px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:2px 5px;border-radius:2px;background:var(--brick-soft);color:var(--brick);margin-left:6px;vertical-align:1px}
+  .badge.grey{background:#E4E6E0;color:var(--ash)}
+  .badge.gold{background:var(--gold-soft);color:#7A5F1E}
+  .tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 8px;overflow-x:auto}
+  .more{display:block;width:100%;margin-top:10px;font:600 13px var(--body);padding:10px;border:1px solid var(--ink);background:#fff;border-radius:4px;cursor:pointer}
+  .method p{margin:8px 0;font-size:14px}
+  .method b{font-weight:600}
+  footer{margin-top:40px;font-size:12px;color:var(--ash);border-top:1px solid var(--line);padding-top:12px}
+  /* near me */
+  .locbar{display:flex;gap:8px;margin-top:8px}
+  .locbar input{flex:1;font:15px var(--body);padding:11px 12px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);min-width:0}
+  .locbar input:focus{outline:2px solid var(--brick);outline-offset:-1px}
+  .locbar button{font:700 13px var(--display);letter-spacing:.06em;text-transform:uppercase;padding:0 14px;border:0;border-radius:4px;background:var(--ink);color:#fff;cursor:pointer;white-space:nowrap}
+  .locbar button.alt{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .radius{display:flex;gap:6px;align-items:center;margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--ash)}
+  .radius button{font:600 11px var(--mono);border:1px solid var(--line);background:#fff;border-radius:3px;padding:3px 8px;cursor:pointer;color:var(--ink)}
+  .radius button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  #map{height:380px;border-radius:6px;border:1px solid var(--line);margin-top:12px;background:#E9EBE5;position:relative;overflow:hidden}
+  #map .leaflet-container{font-family:var(--body)}
+  .mapnote{position:absolute;left:8px;bottom:8px;z-index:500;font:11px var(--mono);color:var(--ash);background:rgba(255,255,255,.9);padding:4px 7px;border-radius:3px}
+  .pin{position:relative;transform:translate(-50%,-100%)}
+  .pin b{display:inline-block;font:700 13px/1 var(--display);padding:5px 7px 4px;border-radius:12px;background:#fff;color:var(--ink);border:1.5px solid var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.25);white-space:nowrap}
+  .pin::after{content:"";position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ink);border-bottom:0}
+  .pin.hot b{background:var(--brick);border-color:var(--brick);color:#fff}.pin.hot::after{border-top-color:var(--brick)}
+  .pin.high b{background:var(--ink);color:#fff}
+  .pin.low b{background:#E4E6E0;border-color:#B4B9AE;color:var(--ash)}.pin.low::after{border-top-color:#B4B9AE}
+  .pin.me b{background:#fff;border-color:var(--brick);color:var(--brick);border-radius:50%;width:16px;height:16px;padding:0;box-shadow:0 0 0 4px rgba(166,35,26,.2)}.pin.me::after{display:none}
+  .leaflet-popup-content{font-family:var(--body);font-size:13px;margin:10px 12px}
+  .leaflet-popup-content b.ps{font-family:var(--display);font-size:22px;font-weight:800;margin-right:6px}
+  .nearhead{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px;gap:8px}
+  .nearhead .sort button{font:600 11px var(--mono);border:1px solid var(--line);background:#fff;border-radius:3px;padding:3px 8px;cursor:pointer;color:var(--ink)}
+  .nearhead .sort button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .cards{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+  .card{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;text-decoration:none}
+  .card .cs{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;text-align:center}
+  .card .cs small{display:block;font:600 9px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ash);margin-top:2px}
+  .card .cv{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.05}
+  .card .cv span{display:block;font-family:var(--body);font-weight:400;font-size:12px;color:var(--ash);margin-top:3px}
+  .card .cd{font-family:var(--mono);font-size:11px;color:var(--ash);text-align:right;line-height:1.4}
+  .card .cd b{display:block;font-family:var(--display);font-weight:700;font-size:16px;color:var(--ink)}
+  .card.hot .cs{color:var(--brick)}
+  .card.protest .cs{color:var(--ash)}
+  .radar svg{width:100%;height:auto;display:block}
+  /* leaderboard */
+  .lb-head{background:var(--ink);color:#fff;border-radius:6px;padding:22px 20px 20px;margin-top:8px}
+  .lb-head .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+  .lb-head h1{font-family:var(--display);font-weight:800;font-size:44px;line-height:.95;margin:6px 0 10px;letter-spacing:-.01em}
+  .lb-head p{margin:0;font-size:14px;color:#D2D5CE}
+  .lb-toggle{display:flex;gap:0;margin-top:16px;border:1px solid #4A4D50;border-radius:4px;overflow:hidden;width:max-content}
+  .lb-toggle button{font:700 12px var(--display);letter-spacing:.08em;text-transform:uppercase;padding:8px 14px;border:0;background:transparent;color:#B9BDB6;cursor:pointer}
+  .lb-toggle button.on{background:var(--gold);color:var(--ink)}
+  .ten{margin-top:14px;background:var(--panel);border:1px solid var(--gold);border-radius:6px;padding:18px 18px 16px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;position:relative}
+  .ten::before{content:"THE ONLY 10";position:absolute;top:-9px;left:16px;background:var(--paper);padding:0 6px;font:700 10px var(--mono);letter-spacing:.14em;color:#7A5F1E}
+  .ten .n{font-family:var(--display);font-weight:800;font-size:84px;line-height:.85;color:var(--gold)}
+  .ten .v{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.05}
+  .ten .v span{display:block;font-family:var(--body);font-weight:400;font-size:13px;color:var(--ash);margin-top:4px}
+  .lb{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .lb .tier{font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#7A5F1E;background:var(--gold-soft);padding:6px 14px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .lb .tier.grey{color:var(--ash);background:#F2F3EF}
+  .lb .row{display:grid;grid-template-columns:44px 64px 1fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);text-decoration:none}
+  .lb .row:last-child{border-bottom:0}
+  .lb .rk{font-family:var(--display);font-weight:800;font-size:22px;color:var(--ash);line-height:1}
+  .lb .row.nine .rk{color:var(--gold)}
+  .lb .sc{font-family:var(--display);font-weight:800;font-size:32px;line-height:1;letter-spacing:-.01em}
+  .lb .row.nine .sc{color:var(--ink)}
+  .lb .vn{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.05}
+  .lb .vn span{display:block;font-family:var(--body);font-weight:400;font-size:12px;color:var(--ash);margin-top:3px}
+  .lb .er{font-family:var(--mono);font-size:10px;color:var(--ash);text-align:right;line-height:1.45}
+  .lb .er b{display:block;font-family:var(--display);font-weight:700;font-size:15px;color:var(--ink)}
+  @media (max-width:420px){
+    .verdict .score{font-size:80px}.verdict .venue{font-size:22px}.tr-score{font-size:60px;min-width:100px}
+    .grid3{grid-template-columns:repeat(2,1fr)}
+    .lb .row{grid-template-columns:36px 56px 1fr auto;gap:8px;padding:10px 10px}.lb .sc{font-size:28px}.lb .vn{font-size:17px}
+    .card{grid-template-columns:56px 1fr auto}.card .cs{font-size:30px}
+    .lb-head h1{font-size:38px}
+  }
+  @media (prefers-reduced-motion:no-preference){ .verdict{animation:rise .5s ease-out both} @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">portnoy<span style="color:var(--brick)">.</span>pizza<small>The Portnoy Score Index · what a Dave Portnoy pizza score is really worth</small></div>
+    <div class="stamp" id="stamp"></div>
+  </header>
+  <nav class="tabs" id="tabs">
+    <a href="#index" data-view="index" class="active">The index</a>
+    <a href="#nearby" data-view="nearby">Near me</a>
+    <a href="#leaderboard" data-view="leaderboard">Leaderboard</a>
+  </nav>
+
+  <!-- ============ VIEW: INDEX ============ -->
+  <div class="view active" id="view-index">
+  <section>
+    <div class="verdict" id="verdict"></div>
+    <p class="lede" id="lede"></p>
+  </section>
+
+  <section>
+    <h2>Translate a score</h2>
+    <div class="translator">
+      <div class="tr-head">
+        <div class="tr-score"><input id="scoreInput" inputmode="decimal" value="8.0" aria-label="Score to translate"></div>
+        <div class="tr-read"><div class="pct" id="trPct"></div><div class="g" id="trGrade"></div></div>
+      </div>
+      <div class="rail">
+        <svg id="railSvg" viewBox="0 0 700 64" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <input type="range" id="scoreRange" min="0" max="10" step="0.1" value="8.0" aria-label="Drag to choose a score">
+      </div>
+      <div class="ticks"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+      <p class="tr-note" id="trNote"></p>
+      <div class="equiv" id="equiv"></div>
+      <p class="tr-note">Same percentile, different year. Grey ticks on the rail are every score he gave in the last 12 months. The outlined year is the base year for the one-line verdict.</p>
+      <div class="quick" id="quick"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Year over year</h2>
+    <div class="chart"><svg id="yoy" viewBox="0 0 700 330"></svg>
+      <div class="legend"><span><i style="background:var(--band)"></i>10th–90th pct</span><span><i style="background:var(--band-strong)"></i>25th–75th</span><span><i style="background:var(--ink);height:8px;width:8px;border-radius:50%"></i>median</span><span><i style="background:var(--brick);height:2px"></i>mean</span><span><i style="background:var(--line);height:2px;width:14px"></i>min–max</span></div>
+    </div>
+    <p class="lede muted" id="yoyNote" style="font-size:14px"></p>
+  </section>
+
+  <section>
+    <h2>The last 12 months</h2>
+    <div class="grid3" id="regime"></div>
+  </section>
+
+  <section>
+    <h2>The 9 drought</h2>
+    <div class="chart"><svg id="nines" viewBox="0 0 700 150"></svg></div>
+    <p class="lede muted" id="ninesNote" style="font-size:14px"></p>
+  </section>
+
+  <section>
+    <h2>Score inflation, rolling</h2>
+    <div class="chart"><svg id="roll" viewBox="0 0 700 220"></svg>
+      <div class="legend"><span><i style="background:var(--brick);height:2px"></i>mean of last 200 reviews</span><span><i style="background:var(--band)"></i>± 1 standard deviation</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ledger</h2>
+    <div class="tablewrap"><table id="ledger"><thead><tr><th>Review</th><th>Score</th><th>Pct then</th><th>Today's terms</th></tr></thead><tbody></tbody></table></div>
+    <button class="more" id="more">Show 50 more</button>
+    <p class="tr-note">"Pct then" is the score's percentile within its own calendar year. "Today's terms" is the score at that same percentile in the last 12 months. Badges: <span class="badge">protest</span> below 1.0, excluded from calibration · <span class="badge grey">archival</span> retro-logged 2013–15, excluded · <span class="badge grey">unresolved</span> venue record missing upstream, score counted.</p>
+  </section>
+
+  <section class="method">
+    <h2>Method</h2>
+    <p><b>Source.</b> Every review on Dave's One Bite account, pulled from the app's own backend and reconciled against the website: <span id="mCounts"></span>. Refreshed automatically after each new score.</p>
+    <p><b>Calibration set.</b> All scores except protest scores below 1.0 and the 14 retro-logged reviews dated 2013–2015. Everything is computed from this set; the excluded records still appear in the ledger with a badge.</p>
+    <p><b>Percentile now.</b> Rank of a score within the trailing 365 days of calibration scores (mid-rank on ties).</p>
+    <p><b>Year equivalents.</b> Quantile mapping: take the score's percentile now, return the score at that same percentile in the target year, interpolated. It corrects for the average and the spread at once — which matters, because his top decile has held at 8.1 for years while his floor rose from 3.9 to 6.8.</p>
+    <p><b>Grades.</b> Rarefied air ≥97 · Elite 90 · Great 75 · Above average 55 · Average 40 · Below average 25 · Poor 10 · Bad below.</p>
+    <p class="muted" style="font-size:12px">Prototype v1.2 · Not affiliated with Barstool Sports or One Bite. Scores are Dave Portnoy's; the arithmetic is ours. Every review links back to its original.</p>
+  </section>
+  </div>
+
+  <!-- ============ VIEW: NEAR ME ============ -->
+  <div class="view" id="view-nearby">
+  <section>
+    <h2>Scores near you</h2>
+    <p class="lede" style="margin-top:0;font-size:15px">Every place he has scored, on a map. Use your location or type a city or state.</p>
+    <div class="locbar">
+      <input id="locInput" placeholder="City or state — e.g. Brooklyn, Boston, NJ" aria-label="City or state">
+      <button id="locGo">Search</button>
+      <button id="locMe" class="alt" title="Use my location">◎ Me</button>
+    </div>
+    <div class="chips" id="locChips"></div>
+    <div class="radius" id="radius"><span>Radius</span><button data-r="5">5 mi</button><button data-r="15" class="on">15 mi</button><button data-r="50">50 mi</button><button data-r="150">150 mi</button><span id="locStatus" style="margin-left:auto"></span></div>
+    <div id="map"><div class="mapnote" id="mapnote"></div></div>
+    <div class="nearhead"><div id="nearCount" style="font-family:var(--display);font-weight:700;font-size:18px"></div><div class="sort"><button data-s="dist" class="on">Nearest</button> <button data-s="score">Highest</button> <button data-s="date">Newest</button></div></div>
+    <div class="cards" id="cards"></div>
+    <button class="more" id="moreNear" style="display:none">Show more</button>
+    <p class="tr-note">Pins show his score. <span style="color:var(--brick);font-weight:600">Red</span> 8.5 and up · <b>black</b> 8.0–8.4 · white 7.5–7.9 · grey below 7.5. Distances are straight-line. Tap a pin for the review.</p>
+  </section>
+  </div>
+
+  <!-- ============ VIEW: LEADERBOARD ============ -->
+  <div class="view" id="view-leaderboard">
+  <section>
+    <div class="lb-head">
+      <div class="eyebrow">All-time leaderboard</div>
+      <h1>The highest scores<br>he has ever given.</h1>
+      <p id="lbSub"></p>
+      <div class="lb-toggle" role="tablist"><button data-m="raw" class="on">By score</button><button data-m="era">Era-adjusted</button></div>
+    </div>
+    <div class="ten" id="ten"></div>
+    <div class="lb" id="lb"></div>
+    <p class="tr-note" id="lbNote"></p>
+  </section>
+  </div>
+
+  <footer>portnoy.pizza · The Portnoy Score Index · methodology v1.2 · data as of <span id="footDate"></span> · onebitescores.com forwards here · not affiliated with Barstool Sports or the One Bite app</footer>
+</div>
+
+<script id="psi-data" type="application/json"></script>
+<script>
+(async function(){
+  // ---- data: embedded blob (preview build) or live /data/* from KV (production) ----
+  function adapt(m, r){
+    const flags = x => (x.protest?1:0)|(x.pre_era?2:0)|(x.venue_unresolved?4:0);
+    const slug = u => u ? u.split('/restaurant/')[1].split('/review/')[0] : '';
+    const cal = r.filter(x=>x.in_calibration); const by_year={};
+    for(const x of cal){ (by_year[x.date.slice(0,4)] ||= []).push(x.score); } for(const y in by_year) by_year[y].sort((a,b)=>a-b);
+    const cutoff = new Date(new Date(m.as_of).getTime() - m.params.window_days*86400000).toISOString().slice(0,10);
+    const window = cal.filter(x=>x.date>cutoff).map(x=>x.score).sort((a,b)=>a-b);
+    const ledger = r.map(x=>[x.date,x.score,x.venue||'',x.city||'',x.state||'',flags(x),slug(x.url),x.id,x.lat,x.lng]);
+    return {as_of:m.as_of, counts:m.counts, year_stats:m.year_stats, regime:m.regime, eras:m.eras, rolling:m.rolling, latest:m.latest, nines:m.nines, grades:m.params.grades, by_year, window, ledger};
+  }
+  let D, STATUS=null;
+  const emb = document.getElementById('psi-data');
+  if(emb && emb.textContent.trim().length>2 && !emb.textContent.startsWith('__DATA')){ D = JSON.parse(emb.textContent); }
+  else {
+    try {
+      const [m, r, st] = await Promise.all([fetch('/data/metrics.json').then(x=>x.json()), fetch('/data/reviews.json').then(x=>x.json()), fetch('/data/status.json').then(x=>x.ok?x.json():null).catch(()=>null)]);
+      D = adapt(m, r); STATUS = st;
+    } catch(e){ document.getElementById('verdict').innerHTML = '<div class="eyebrow">Data unavailable</div><p class="line">The index data could not be loaded. Try again in a minute.</p>'; return; }
+  }
+  const years = Object.keys(D.by_year).sort();
+  const BASE = "2019";
+  const fmt1 = x => (Math.round(x*10)/10).toFixed(1);
+  const ord = n => { const s=["th","st","nd","rd"], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); };
+  const art = s => (/^8/.test(fmt1(s)) ? 'An' : 'A');
+  const LEDGER = D.ledger.map(r=>({date:r[0],score:r[1],venue:r[2],city:r[3],state:r[4],flags:r[5],slug:r[6],id:r[7],lat:r[8],lng:r[9]}));
+  const url = r => r.slug ? `https://onebite.app/restaurant/${r.slug}/review/${r.id}` : null;
+
+  // ---- stats ----
+  function quantile(sorted, q){ const n=sorted.length; if(!n) return null; if(n===1) return sorted[0]; const pos=q*(n-1), lo=Math.floor(pos), hi=Math.ceil(pos); return sorted[lo]+(sorted[hi]-sorted[lo])*(pos-lo); }
+  function pctRank(sorted, s){ let below=0, eq=0; for(const v of sorted){ if(v < s-1e-9) below++; else if(Math.abs(v-s)<1e-9) eq++; } return 100*(below+0.5*eq)/sorted.length; }
+  function grade(p){ for(const [lo,label] of D.grades){ if(p>=lo) return label; } return D.grades[D.grades.length-1][1]; }
+  function pctInYear(date, s){ const arr=D.by_year[date.slice(0,4)]; return arr && arr.length>=30 ? pctRank(arr,s) : null; }
+  const W = D.window; const wmax = W[W.length-1];
+
+  // ---- tabs / routing ----
+  const tabs = document.querySelectorAll('#tabs a');
+  function show(view){ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+view)); tabs.forEach(t=>t.classList.toggle('active', t.dataset.view===view)); if(view==='nearby') setTimeout(nearInit,0); if(view==='leaderboard') lbInit(); try{window.scrollTo({top:0});}catch(e){} }
+  tabs.forEach(t=>t.addEventListener('click', e=>{ e.preventDefault(); history.replaceState(null,'','#'+t.dataset.view); show(t.dataset.view); }));
+  window.addEventListener('hashchange', ()=>{ const v=(location.hash||'#index').slice(1); if(['index','nearby','leaderboard'].includes(v)) show(v); });
+
+  // ---- header stamp ----
+  const ago = STATUS && STATUS.checked_at ? Math.max(0, Math.round((Date.now()-new Date(STATUS.checked_at).getTime())/60000)) : null;
+  document.getElementById('stamp').innerHTML = `<span class="live"></span>${ago==null?'live · checked just now':(ago<1?'live · checked just now':`live · checked ${ago} min ago`)}<br>last score ${D.latest.date}<br><b>${D.counts.archive.toLocaleString()}</b> reviews on record`;
+  document.getElementById('footDate').textContent = D.as_of;
+  document.getElementById('mCounts').textContent = `${D.counts.archive.toLocaleString()} reviews from ${D.counts.first_date} to ${D.counts.last_date}, ${D.counts.calibration.toLocaleString()} in the calibration set`;
+
+  // ---- verdict ----
+  const L = D.latest; const pL = pctRank(W, L.score); const gL = grade(pL);
+  const eq19 = quantile(D.by_year[BASE], pL/100), eq17 = quantile(D.by_year["2017"], pL/100);
+  const higher = W.filter(v=>v>L.score+1e-9).length;
+  document.getElementById('verdict').innerHTML = `
+    <div class="eyebrow">Latest score · ${L.date}</div>
+    <div class="row"><div class="score">${fmt1(L.score)}</div>
+      <div class="venue">${L.venue||'Venue pending'}<span>${[L.city,L.state].filter(Boolean).join(', ')}</span></div></div>
+    <div class="grade">${gL}</div>
+    <div class="facts">
+      <div class="fact"><b>${Math.round(pL)}<span style="font-size:14px;color:#B9BDB6;text-transform:none;letter-spacing:0">${ord(Math.round(pL)).replace(/\d+/,'')}</span></b><span>percentile, last 12 mo</span></div>
+      <div class="fact"><b>${higher}</b><span>higher scores this year</span></div>
+      <div class="fact"><b>${fmt1(eq19)}</b><span>in ${BASE} terms</span></div>
+    </div>
+    <p class="line">${art(L.score)} ${fmt1(L.score)} right now beats ${Math.round(pL)}% of what he's scored in the past year (${W.length} reviews). At the same percentile, that's ${art(eq19).toLowerCase()} ${fmt1(eq19)} in ${BASE} and ${art(eq17).toLowerCase()} ${fmt1(eq17)} in 2017.</p>`;
+  document.getElementById('lede').innerHTML = `People hear <b>${fmt1(L.score)}</b> and expect a 9. He has given <b>${D.nines.by_year[years[years.length-1]]||0}</b> nines this year and <b>${D.regime.count_ge_9}</b> in the last twelve months. Under his current scale, ${art(L.score).toLowerCase()} ${fmt1(L.score)} is ${gL.toLowerCase()==='elite'||gL.toLowerCase()==='rarefied air'?'not a letdown. It is the top of the board.':'exactly what it says.'}`;
+
+  // ---- translator ----
+  const inp = document.getElementById('scoreInput'), rng = document.getElementById('scoreRange');
+  const railSvg = document.getElementById('railSvg');
+  function drawRail(){
+    const x = s => 10 + (s/10)*680; let out = '';
+    const counts = {}; for(const v of W){ const k=fmt1(v); counts[k]=(counts[k]||0)+1; }
+    for(const k in counts){ const h = Math.min(30, 4 + counts[k]*4); out += `<line x1="${x(+k)}" x2="${x(+k)}" y1="${34-h}" y2="34" stroke="#B4B9AE" stroke-width="3" />`; }
+    const med = quantile(W,.5), p90 = quantile(W,.9);
+    out += `<line x1="${x(med)}" x2="${x(med)}" y1="0" y2="34" stroke="#17181A" stroke-width="1" stroke-dasharray="2 2"/><text x="${x(med)}" y="8" font-size="10" font-family="IBM Plex Mono,monospace" fill="#6B7075" text-anchor="middle">median ${fmt1(med)}</text>`;
+    out += `<line x1="${x(p90)}" x2="${x(p90)}" y1="0" y2="34" stroke="#A6231A" stroke-width="1" stroke-dasharray="2 2"/><text x="${x(p90)}" y="8" font-size="10" font-family="IBM Plex Mono,monospace" fill="#A6231A" text-anchor="middle">p90 ${fmt1(p90)}</text>`;
+    railSvg.innerHTML = out;
+  }
+  function render(sRaw){
+    let s = Math.max(0, Math.min(10, Math.round((+sRaw||0)*10)/10));
+    rng.value = s; if(document.activeElement!==inp) inp.value = fmt1(s);
+    const p = pctRank(W, s), g = grade(p); const above = s > wmax+1e-9;
+    document.getElementById('trPct').innerHTML = above ? `>100<small>th</small>` : `${Math.round(p)}<small>${ord(Math.round(p)).replace(/\d+/,'')} pct</small>`;
+    document.getElementById('trGrade').innerHTML = `<span class="grade" style="margin-top:0">${g}</span>`;
+    const higherN = W.filter(v=>v>s+1e-9).length, eqN = W.filter(v=>Math.abs(v-s)<1e-9).length;
+    document.getElementById('trNote').innerHTML = above
+      ? `${art(s)} <b>${fmt1(s)}</b> would be higher than every one of the ${W.length} scores he has given in the last 12 months. His high in that window is <b>${fmt1(wmax)}</b>.`
+      : `In the last 12 months he gave <b>${higherN}</b> score${higherN===1?'':'s'} higher than ${fmt1(s)} and <b>${eqN}</b> exactly ${fmt1(s)}, out of ${W.length}.`;
+    let eqHtml = '';
+    for(const y of years){ const arr = D.by_year[y]; if(arr.length<30) continue; const e = quantile(arr, p/100); eqHtml += `<div class="eq ${y===BASE?'base':''}"><b>${fmt1(e)}</b><span>${y}${y===years[years.length-1]?' YTD':''}</span></div>`; }
+    document.getElementById('equiv').innerHTML = eqHtml;
+  }
+  rng.addEventListener('input', e=>render(e.target.value));
+  inp.addEventListener('input', e=>{ const v = parseFloat(e.target.value); if(!isNaN(v)) render(v); });
+  inp.addEventListener('blur', e=>render(e.target.value));
+  document.getElementById('quick').innerHTML = [6.5,7.0,7.5,8.0,8.5,9.0,L.score].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b).map(v=>`<button data-v="${v}">${fmt1(v)}${v===L.score?' · latest':''}</button>`).join('');
+  document.getElementById('quick').addEventListener('click', e=>{ if(e.target.dataset.v) render(e.target.dataset.v); });
+  drawRail(); render(8.0);
+
+  // ---- YoY chart ----
+  (function(){
+    const svg = document.getElementById('yoy'); const Wd=700, H=330, padL=34, padR=12, padT=14, padB=34;
+    const ys = years; const yMin=0, yMax=10;
+    const X = i => padL + (i+0.5)*((Wd-padL-padR)/ys.length);
+    const Y = v => padT + (1-(v-yMin)/(yMax-yMin))*(H-padT-padB);
+    let out = '';
+    for(let g=0; g<=10; g+=2){ out += `<line x1="${padL}" x2="${Wd-padR}" y1="${Y(g)}" y2="${Y(g)}" stroke="#E4E6E0"/><text x="${padL-6}" y="${Y(g)+4}" font-size="11" text-anchor="end" fill="#6B7075" font-family="IBM Plex Mono,monospace">${g}</text>`; }
+    const bw = Math.min(28, (Wd-padL-padR)/ys.length*0.55); let meanPath = '';
+    ys.forEach((y,i)=>{ const s = D.year_stats[y]; const x = X(i);
+      out += `<line x1="${x}" x2="${x}" y1="${Y(s.min)}" y2="${Y(s.max)}" stroke="#D6D9D1" stroke-width="1.5"/>`;
+      out += `<rect x="${x-bw/2}" y="${Y(s.p90)}" width="${bw}" height="${Y(s.p10)-Y(s.p90)}" fill="#CBD0C4" rx="1"/>`;
+      out += `<rect x="${x-bw/2}" y="${Y(s.p75)}" width="${bw}" height="${Y(s.p25)-Y(s.p75)}" fill="#8E968A" rx="1"/>`;
+      out += `<circle cx="${x}" cy="${Y(s.median)}" r="4" fill="#17181A"/>`;
+      out += `<text x="${x}" y="${H-padB+16}" font-size="11" text-anchor="middle" fill="${i===ys.length-1?'#A6231A':'#6B7075'}" font-family="IBM Plex Mono,monospace">${y.slice(2)}${i===ys.length-1?'*':''}</text>`;
+      out += `<text x="${x}" y="${H-padB+29}" font-size="9" text-anchor="middle" fill="#9A9E97" font-family="IBM Plex Mono,monospace">n${s.n}</text>`;
+      meanPath += (i?'L':'M')+x+','+Y(s.mean)+' ';
+    });
+    out += `<path d="${meanPath}" fill="none" stroke="#A6231A" stroke-width="2"/>`;
+    ys.forEach((y,i)=>{ out += `<circle cx="${X(i)}" cy="${Y(D.year_stats[y].mean)}" r="2.5" fill="#A6231A"/>`; });
+    svg.innerHTML = out;
+    const first = D.year_stats[ys[0]], last = D.year_stats[ys[ys.length-1]];
+    document.getElementById('yoyNote').innerHTML = `The floor moved, the ceiling didn't. His 10th percentile went from <b>${fmt1(first.p10)}</b> in ${ys[0]} to <b>${fmt1(last.p10)}</b> in ${ys[ys.length-1]}; his 90th percentile has sat at <b>8.1</b> almost every year since 2018. Mean ${fmt1(first.mean)} → ${fmt1(last.mean)}, standard deviation ${first.sd.toFixed(2)} → ${last.sd.toFixed(2)}. * current year to date.`;
+  })();
+
+  // ---- regime ----
+  const R = D.regime; const daysSince9 = D.nines.last ? Math.round((new Date(D.as_of)-new Date(D.nines.last.date))/86400000) : null;
+  document.getElementById('regime').innerHTML = [
+    ['n', R.n, 'reviews'], [fmt1(R.median), 'median'], [fmt1(R.mean), 'mean'], [R.sd.toFixed(2), 'std deviation'],
+    [fmt1(R.p90), '90th percentile'], [fmt1(R.max), 'highest'], [R.share_ge_8+'%', 'scores 8.0+'], [R.count_ge_9, 'scores 9.0+'],
+    [D.nines.reviews_since, 'reviews since last 9', 'brick']
+  ].map(k=> k[0]==='n' ? `<div class="kpi"><b>${k[1]}</b><span>${k[2]}</span></div>` : `<div class="kpi ${k[2]||''}"><b>${k[0]}</b><span>${k[1]}</span></div>`).join('');
+
+  // ---- nines chart ----
+  (function(){
+    const svg = document.getElementById('nines'); const Wd=700,H=150,padL=24,padR=12,padT=18,padB=28;
+    const ys=years; const mx=Math.max(...ys.map(y=>D.nines.by_year[y]||0),1);
+    const X=i=>padL+(i+0.5)*((Wd-padL-padR)/ys.length); const bw=Math.min(30,(Wd-padL-padR)/ys.length*0.6);
+    let out=''; ys.forEach((y,i)=>{ const v=D.nines.by_year[y]||0; const h=(v/mx)*(H-padT-padB); const x=X(i);
+      out+=`<rect x="${x-bw/2}" y="${H-padB-h}" width="${bw}" height="${h}" fill="${v?'#A6231A':'#E4E6E0'}" rx="1"/>`;
+      out+=`<text x="${x}" y="${H-padB-h-5}" font-size="12" text-anchor="middle" fill="#17181A" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700">${v}</text>`;
+      out+=`<text x="${x}" y="${H-padB+15}" font-size="11" text-anchor="middle" fill="#6B7075" font-family="IBM Plex Mono,monospace">${y.slice(2)}</text>`; });
+    svg.innerHTML=out;
+    const nl = D.nines.last;
+    document.getElementById('ninesNote').innerHTML = nl ? `Last 9.0+: <b>${fmt1(nl.score)}</b> at <b>${nl.venue}</b> (${[nl.city,nl.state].filter(Boolean).join(', ')}) on ${nl.date} — <b>${D.nines.reviews_since}</b> reviews and ${daysSince9} days ago. Twenty-two scores of 9.0+ in thirteen years; four since 2020. A 9 today would be higher than anything in the last twelve months.` : '';
+  })();
+
+  // ---- rolling chart ----
+  (function(){
+    const svg=document.getElementById('roll'); const Wd=700,H=220,padL=34,padR=12,padT=12,padB=26; const S=D.rolling;
+    const t0=new Date(S[0].date).getTime(), t1=new Date(S[S.length-1].date).getTime();
+    const X=d=>padL+((new Date(d).getTime()-t0)/(t1-t0))*(Wd-padL-padR); const yMin=4,yMax=9; const Y=v=>padT+(1-(Math.min(yMax,Math.max(yMin,v))-yMin)/(yMax-yMin))*(H-padT-padB);
+    let out=''; for(let g=yMin; g<=yMax; g++){ out+=`<line x1="${padL}" x2="${Wd-padR}" y1="${Y(g)}" y2="${Y(g)}" stroke="#E4E6E0"/><text x="${padL-6}" y="${Y(g)+4}" font-size="11" text-anchor="end" fill="#6B7075" font-family="IBM Plex Mono,monospace">${g}</text>`; }
+    let band='M'+S.map(p=>X(p.date)+','+Y(p.mean+p.sd)).join(' L')+' L'+S.slice().reverse().map(p=>X(p.date)+','+Y(p.mean-p.sd)).join(' L')+' Z';
+    out+=`<path d="${band}" fill="#CBD0C4" opacity=".7"/>`;
+    out+=`<path d="M${S.map(p=>X(p.date)+','+Y(p.mean)).join(' L')}" fill="none" stroke="#A6231A" stroke-width="2"/>`;
+    for(let y=2017;y<=2026;y++){ const x=X(y+'-01-01'); if(x>padL&&x<Wd-padR) out+=`<line x1="${x}" x2="${x}" y1="${padT}" y2="${H-padB}" stroke="#E4E6E0" stroke-dasharray="2 3"/><text x="${x+3}" y="${H-padB+15}" font-size="10" fill="#6B7075" font-family="IBM Plex Mono,monospace">${String(y).slice(2)}</text>`; }
+    svg.innerHTML=out;
+  })();
+
+  // ---- ledger ----
+  const led = LEDGER.slice().reverse(); let shown=0; const tb=document.querySelector('#ledger tbody');
+  function addRows(n){
+    let html='';
+    for(let i=shown;i<Math.min(shown+n,led.length);i++){ const r=led[i];
+      const excluded = (r.flags&1)||(r.flags&2); const p = excluded?null:pctInYear(r.date,r.score); const today = p==null?null:quantile(W,p/100);
+      const u = url(r);
+      const name = r.venue?(u?`<a href="${u}" target="_blank" rel="noopener">${r.venue}</a>`:r.venue):`<span class="muted">Venue record missing</span>`;
+      const badges = (r.flags&1?'<span class="badge">protest</span>':'')+(r.flags&2?'<span class="badge grey">archival</span>':'')+(r.flags&4?'<span class="badge grey">unresolved</span>':'');
+      html+=`<tr><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td><td>${p==null?'—':ord(Math.round(p))}</td><td>${today==null?'—':fmt1(today)}</td></tr>`; }
+    tb.insertAdjacentHTML('beforeend',html); shown=Math.min(shown+n,led.length);
+    document.getElementById('more').style.display = shown>=led.length?'none':'block';
+    document.getElementById('more').textContent = `Show 50 more (${(led.length-shown).toLocaleString()} remaining)`;
+  }
+  document.getElementById('more').addEventListener('click',()=>addRows(50));
+  addRows(40);
+
+  // ================= NEAR ME =================
+  const STATES = {"al":"Alabama","ak":"Alaska","az":"Arizona","ar":"Arkansas","ca":"California","co":"Colorado","ct":"Connecticut","de":"Delaware","fl":"Florida","ga":"Georgia","hi":"Hawaii","id":"Idaho","il":"Illinois","in":"Indiana","ia":"Iowa","ks":"Kansas","ky":"Kentucky","la":"Louisiana","me":"Maine","md":"Maryland","ma":"Massachusetts","mi":"Michigan","mn":"Minnesota","ms":"Mississippi","mo":"Missouri","mt":"Montana","ne":"Nebraska","nv":"Nevada","nh":"New Hampshire","nj":"New Jersey","nm":"New Mexico","ny":"New York","nc":"North Carolina","nd":"North Dakota","oh":"Ohio","ok":"Oklahoma","or":"Oregon","pa":"Pennsylvania","ri":"Rhode Island","sc":"South Carolina","sd":"South Dakota","tn":"Tennessee","tx":"Texas","ut":"Utah","vt":"Vermont","va":"Virginia","wa":"Washington","wv":"West Virginia","wi":"Wisconsin","wy":"Wyoming","dc":"District of Columbia"};
+  const GEO = LEDGER.filter(r=>r.lat!=null && r.lng!=null);
+  const toRad = d=>d*Math.PI/180;
+  function miles(a,b,c,d){ const R=3958.8; const dLat=toRad(c-a), dLng=toRad(d-b); const s=Math.sin(dLat/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(s)); }
+  const median = arr => { const s=arr.slice().sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+  let map=null, layer=null, meMarker=null, nearInited=false, center=null, centerLabel='', radiusMi=15, sortMode='dist', nearRows=[], nearShown=0, tilesOk=false, stateFilter=null;
+  const pinClass = s => s>=8.5?'hot':s>=8.0?'high':s>=7.5?'mid':'low';
+  function nearInit(){
+    if(nearInited){ if(map) map.invalidateSize(); return; }
+    nearInited=true;
+    document.getElementById('locChips').innerHTML = ['Manhattan','Brooklyn','Boston','Philadelphia','Chicago','Miami','New Haven','Nantucket','New Jersey'].map(c=>`<button data-c="${c}">${c}</button>`).join('');
+    document.getElementById('locChips').addEventListener('click',e=>{ if(e.target.dataset.c){ document.getElementById('locInput').value=e.target.dataset.c; searchPlace(e.target.dataset.c);} });
+    document.getElementById('locGo').addEventListener('click',()=>searchPlace(document.getElementById('locInput').value));
+    document.getElementById('locInput').addEventListener('keydown',e=>{ if(e.key==='Enter') searchPlace(e.target.value); });
+    document.getElementById('locMe').addEventListener('click',useMyLocation);
+    document.getElementById('radius').addEventListener('click',e=>{ if(e.target.dataset.r){ radiusMi=+e.target.dataset.r; document.querySelectorAll('#radius button').forEach(b=>b.classList.toggle('on',b===e.target)); refreshNear(); } });
+    document.querySelector('.nearhead .sort').addEventListener('click',e=>{ if(e.target.dataset.s){ sortMode=e.target.dataset.s; document.querySelectorAll('.nearhead .sort button').forEach(b=>b.classList.toggle('on',b===e.target)); refreshNear(); } });
+    document.getElementById('moreNear').addEventListener('click',()=>{ renderCards(nearShown+25); });
+    if(window.L){
+      map = L.map('map',{zoomControl:true, attributionControl:true, scrollWheelZoom:false});
+      const tl = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19, attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(map);
+      tl.on('load',()=>{ tilesOk=true; document.getElementById('mapnote').textContent=''; });
+      setTimeout(()=>{ if(!tilesOk) document.getElementById('mapnote').textContent='Map tiles blocked in this preview — pins are still placed correctly. Opens fully in a browser.'; },3500);
+      layer = L.layerGroup().addTo(map);
+    } else {
+      document.getElementById('mapnote').textContent='';
+    }
+    // default: Manhattan
+    searchPlace('Manhattan');
+    // try silent geolocation if permitted
+    if(navigator.permissions && navigator.permissions.query){ navigator.permissions.query({name:'geolocation'}).then(p=>{ if(p.state==='granted') useMyLocation(); }).catch(()=>{}); }
+  }
+  function useMyLocation(){
+    const st=document.getElementById('locStatus'); st.textContent='locating…';
+    if(!navigator.geolocation){ st.textContent='location unavailable here — type a city'; return; }
+    navigator.geolocation.getCurrentPosition(pos=>{ center=[pos.coords.latitude,pos.coords.longitude]; centerLabel='near you'; stateFilter=null; document.getElementById('radius').style.visibility='visible'; st.textContent=''; refreshNear(true); },
+      err=>{ st.textContent='location blocked here — type a city'; }, {timeout:8000, maximumAge:600000});
+  }
+  function searchPlace(q){
+    q=(q||'').trim(); if(!q) return; const ql=q.toLowerCase(); const st=document.getElementById('locStatus');
+    const stateName = STATES[ql] || Object.values(STATES).find(s=>s.toLowerCase()===ql);
+    let hits;
+    if(stateName){ hits=GEO.filter(r=>(r.state||'').toLowerCase()===stateName.toLowerCase()); }
+    else { hits=GEO.filter(r=>(r.city||'').toLowerCase()===ql); if(!hits.length) hits=GEO.filter(r=>(r.city||'').toLowerCase().includes(ql) || (r.venue||'').toLowerCase().includes(ql)); }
+    if(!hits.length){ st.textContent=`No reviews match "${q}" — try a nearby city or a state`; return; }
+    st.textContent=''; center=[median(hits.map(r=>r.lat)), median(hits.map(r=>r.lng))]; centerLabel=stateName?('in '+stateName):('near '+q); stateFilter=stateName||null;
+    document.getElementById('radius').style.visibility = stateFilter?'hidden':'visible';
+    refreshNear(true);
+  }
+  function refreshNear(recenter){
+    if(!center) return;
+    let rows = GEO.map(r=>({...r, dist:miles(center[0],center[1],r.lat,r.lng)})).filter(r=> stateFilter ? (r.state||'').toLowerCase()===stateFilter.toLowerCase() : r.dist<=radiusMi);
+    let autoNote='';
+    if(!stateFilter && rows.length<8){ const all=GEO.map(r=>({...r, dist:miles(center[0],center[1],r.lat,r.lng)})).sort((a,b)=>a.dist-b.dist); rows=all.slice(0,12); autoNote=` (nearest 12 — fewer than 8 within ${radiusMi} mi)`; }
+    rows.sort(sortMode==='dist'?(a,b)=>a.dist-b.dist:sortMode==='score'?(a,b)=>b.score-a.score||a.dist-b.dist:(a,b)=>b.date.localeCompare(a.date));
+    nearRows=rows;
+    const best = rows.slice().sort((a,b)=>b.score-a.score)[0];
+    document.getElementById('nearCount').innerHTML = `${rows.length} score${rows.length===1?'':'s'} ${centerLabel}${autoNote}${best?` · high: <span style="color:var(--brick)">${fmt1(best.score)}</span> ${best.venue}`:''}${rows.length>400?` · map shows the ${sortMode==='dist'?'nearest':sortMode==='score'?'highest':'newest'} 400`:''}`;
+    renderCards(25);
+    if(map){
+      layer.clearLayers();
+      rows.slice(0,400).forEach(r=>{ const m=L.marker([r.lat,r.lng],{icon:L.divIcon({className:'', html:`<div class="pin ${pinClass(r.score)}"><b>${fmt1(r.score)}</b></div>`, iconSize:[0,0]})});
+        const u=url(r); m.bindPopup(`<b class="ps">${fmt1(r.score)}</b><b>${r.venue||'Venue record missing'}</b><br><span style="color:#6B7075">${[r.city,r.state].filter(Boolean).join(', ')} · ${r.date} · ${r.dist.toFixed(1)} mi</span>${u?`<br><a href="${u}" target="_blank" rel="noopener">Watch the review ↗</a>`:''}`); layer.addLayer(m); });
+      if(meMarker) map.removeLayer(meMarker);
+      meMarker = L.marker(center,{icon:L.divIcon({className:'',html:'<div class="pin me"><b></b></div>',iconSize:[0,0]}), interactive:false}).addTo(map);
+      if(recenter){ const b=L.latLngBounds(rows.slice(0,400).map(r=>[r.lat,r.lng]).concat(stateFilter?[]:[center])); map.fitBounds(b.pad(0.12),{maxZoom:14}); }
+      setTimeout(()=>map.invalidateSize(),50);
+    } else { drawRadar(rows); }
+  }
+  function renderCards(n){
+    const rows=nearRows.slice(0,n); nearShown=rows.length;
+    document.getElementById('cards').innerHTML = rows.map(r=>{ const p=((r.flags&1)||(r.flags&2))?null:pctInYear(r.date,r.score); const u=url(r);
+      return `<a class="card ${r.score>=8.5?'hot':''} ${r.flags&1?'protest':''}" ${u?`href="${u}" target="_blank" rel="noopener"`:''}>
+        <div class="cs">${fmt1(r.score)}<small>${p==null?(r.flags&1?'protest':'archival'):'top '+Math.max(1,Math.round(100-p))+'%'}</small></div>
+        <div class="cv">${r.venue||'Venue record missing'}<span>${[r.city,r.state].filter(Boolean).join(', ')}</span></div>
+        <div class="cd"><b>${r.dist<10?r.dist.toFixed(1):Math.round(r.dist)} mi</b>${r.date.slice(0,4)}</div></a>`; }).join('');
+    document.getElementById('moreNear').style.display = nearRows.length>nearShown?'block':'none';
+    document.getElementById('moreNear').textContent = `Show more (${nearRows.length-nearShown} remaining)`;
+  }
+  function drawRadar(rows){ // fallback when Leaflet is unavailable: distance rings, north up
+    const el=document.getElementById('map'); const Wd=700,H=380,cx=Wd/2,cy=H/2; const R=Math.min(Wd,H)/2-24; const maxD=Math.max(radiusMi, ...rows.map(r=>r.dist), 1);
+    const sc=R/maxD; let out=`<svg viewBox="0 0 ${Wd} ${H}" style="width:100%;height:100%;display:block">`;
+    [0.25,0.5,0.75,1].forEach(f=>{ out+=`<circle cx="${cx}" cy="${cy}" r="${R*f}" fill="none" stroke="#D6D9D1"/><text x="${cx+4}" y="${cy-R*f+12}" font-size="10" fill="#9A9E97" font-family="IBM Plex Mono,monospace">${(maxD*f).toFixed(0)} mi</text>`; });
+    rows.slice(0,400).forEach(r=>{ const dx=(r.lng-center[1])*Math.cos(toRad(center[0]))*69.17, dy=(r.lat-center[0])*69.17; const x=cx+dx*sc, y=cy-dy*sc; const c=pinClass(r.score);
+      const fill=c==='hot'?'#A6231A':c==='high'?'#17181A':c==='mid'?'#fff':'#E4E6E0'; const tx=c==='hot'||c==='high'?'#fff':(c==='low'?'#6B7075':'#17181A');
+      out+=`<g><rect x="${x-14}" y="${y-9}" width="28" height="18" rx="9" fill="${fill}" stroke="${c==='low'?'#B4B9AE':'#17181A'}" stroke-width="1"/><text x="${x}" y="${y+4}" font-size="11" font-weight="700" text-anchor="middle" fill="${tx}" font-family="Barlow Condensed,Arial Narrow,sans-serif">${fmt1(r.score)}</text></g>`; });
+    out+=`<circle cx="${cx}" cy="${cy}" r="6" fill="#fff" stroke="#A6231A" stroke-width="2"/></svg>`;
+    el.innerHTML = out + `<div class="mapnote">Radar view (map library unavailable here). North is up; rings are distance from ${centerLabel}.</div>`;
+  }
+
+  // ================= LEADERBOARD =================
+  let lbMode='raw', lbInited=false;
+  function lbInit(){ if(lbInited) return; lbInited=true;
+    document.querySelector('.lb-toggle').addEventListener('click',e=>{ if(e.target.dataset.m){ lbMode=e.target.dataset.m; document.querySelectorAll('.lb-toggle button').forEach(b=>b.classList.toggle('on',b===e.target)); lbRender(); } });
+    lbRender();
+  }
+  function zFor(r){ const y=r.date.slice(0,4); const s=D.year_stats[y] || D.year_stats[years[0]]; return (r.score - s.mean)/s.sd; }
+  function lbRender(){
+    const nines = LEDGER.filter(r=>r.score>=9.0).length; const eightfive = LEDGER.filter(r=>r.score>=8.5).length;
+    document.getElementById('lbSub').textContent = `${D.counts.archive.toLocaleString()} reviews since 2013. ${nines} have scored 9.0 or better. ${eightfive} have reached 8.5. One has ever been a 10.`;
+    const ten = LEDGER.filter(r=>r.score>=10)[0];
+    document.getElementById('ten').innerHTML = ten ? `<div class="n">10</div><div class="v"><span style="font:700 11px var(--mono);letter-spacing:.1em;color:#7A5F1E;margin:0 0 4px">№ 1 · ALL TIME</span>${ten.venue}<span>${[ten.city,ten.state].filter(Boolean).join(', ')} · ${ten.date}${ten.flags&2?' · retro-logged review':''}</span></div>` : '';
+    let rows;
+    if(lbMode==='raw'){ rows = LEDGER.filter(r=>r.score<10 && r.score>=8.5 && !(r.flags&1)).sort((a,b)=>b.score-a.score||a.date.localeCompare(b.date)); }
+    else { rows = LEDGER.filter(r=>!(r.flags&1)).map(r=>({...r,z:zFor(r)})).sort((a,b)=>b.z-a.z||b.score-a.score).slice(0,50); }
+    let html='', lastTier=null, rank=0, prevKey=null, i=(lbMode==='raw'?1:0);
+    rows.forEach(r=>{ i++; const key = lbMode==='raw'?r.score:r.z.toFixed(2); if(key!==prevKey){ rank=i; prevKey=key; }
+      const tier = lbMode==='raw' ? (r.score>=9.0?'The 9.0 club':r.score>=8.5?'8.5 and up':'8.0 and up') : (rank<=10?'Most dominant scores of their year':'Ranked by standard deviations above that year\'s mean');
+      if(tier!==lastTier){ html+=`<div class="tier ${tier.startsWith('The 9')||tier.startsWith('Most')?'':'grey'}">${tier}</div>`; lastTier=tier; }
+      const p = (r.flags&2)?null:pctInYear(r.date,r.score); const u=url(r); const y=r.date.slice(0,4); const ys=D.year_stats[y];
+      const era = lbMode==='raw' ? (p==null?`<b>—</b>archival`:`<b>top ${Math.max(0.5,Math.round((100-p)*10)/10)}%</b>of ${y}`) : `<b>+${r.z.toFixed(2)}σ</b>${ys?`${y} mean ${fmt1(ys.mean)}`:'vs 2016 field'}`;
+      html+=`<a class="row ${r.score>=9?'nine':''}" ${u?`href="${u}" target="_blank" rel="noopener"`:''}><div class="rk">${rank}</div><div class="sc">${fmt1(r.score)}</div><div class="vn">${r.venue||'<span class="muted">Unidentified venue</span>'}${r.flags&2?'<span class="badge gold">archival</span>':''}${(!r.venue)?'<span class="badge grey">record incomplete</span>':''}<span>${[r.city,r.state].filter(Boolean).join(', ')} · ${r.date}</span></div><div class="er">${era}</div></a>`; });
+    document.getElementById('lb').innerHTML=html;
+    document.getElementById('lbNote').innerHTML = lbMode==='raw'
+      ? `Monte's holds №1 outright; the board below runs from №2 through every score of 8.5 or better. Ties share a rank; earlier review listed first. "Top X% of year" is where the score sat among everything he gave that calendar year. Retro-logged 2013–15 reviews count on the all-time board and are marked archival.`
+      : `Era-adjusted ranks each score by how far it stood above his mean for that year, in standard deviations — the index's own measure of dominance. A 9.3 in a year with a tight scale beats a 9.4 in a year he was handing out 4s. Pre-2016 reviews are measured against the 2016 field.`;
+  }
+
+  // initial route
+  const v0=(location.hash||'#index').slice(1); if(['nearby','leaderboard'].includes(v0)) show(v0);
+})();
+</script>
+</body>
+</html>
