@@ -1,0 +1,53 @@
+name: PSI poll — detect new Dave scores every 5 minutes
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Run a full reconcile"
+        default: "false"
+concurrency: { group: psi-poll, cancel-in-progress: false }
+permissions: { contents: write }
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Decide mode
+        id: mode
+        run: |
+          if [ "${{ github.event.schedule }}" = "0 6 * * 1" ] || [ "${{ github.event.inputs.full }}" = "true" ]; then echo "flag=--full" >> $GITHUB_OUTPUT; else echo "flag=" >> $GITHUB_OUTPUT; fi
+      - name: Run poller
+        id: poll
+        env:
+          PSI_STATE: ledger_raw.json
+          PSI_OUT: out
+          PSI_WEBHOOK: ${{ secrets.PSI_WEBHOOK }}
+        run: |
+          mkdir -p out
+          python3 psi_poller.py ${{ steps.mode.outputs.flag }} | tee poll.log
+          echo "changed=$(python3 -c "import json;print(json.load(open('out/status.json')).get('changed',0))")" >> $GITHUB_OUTPUT
+      - name: Publish status.json to KV
+        env: { CLOUDFLARE_API_TOKEN: "${{ secrets.CLOUDFLARE_API_TOKEN }}", CLOUDFLARE_ACCOUNT_ID: "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" }
+        run: npx --yes wrangler@3 kv key put --namespace-id "${{ secrets.KV_NAMESPACE_ID || 'b90a2a5a7fbf44b5ac1af0b6d0fc00ac' }}" status.json --path out/status.json --remote
+      - name: Publish metrics/reviews to KV + load D1 + snapshot to R2
+        if: steps.poll.outputs.changed != '0' || github.event_name == 'workflow_dispatch'
+        env: { CLOUDFLARE_API_TOKEN: "${{ secrets.CLOUDFLARE_API_TOKEN }}", CLOUDFLARE_ACCOUNT_ID: "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" }
+        run: |
+          npx --yes wrangler@3 kv key put --namespace-id "${{ secrets.KV_NAMESPACE_ID || 'b90a2a5a7fbf44b5ac1af0b6d0fc00ac' }}" metrics.json --path out/metrics.json --remote
+          npx --yes wrangler@3 kv key put --namespace-id "${{ secrets.KV_NAMESPACE_ID || 'b90a2a5a7fbf44b5ac1af0b6d0fc00ac' }}" reviews.json --path out/reviews.json --remote
+          npx --yes wrangler@3 d1 execute psi --remote --file out/seed.sql --yes
+          npx --yes wrangler@3 r2 object put "psi-backups/ledger_raw-$(date -u +%F).json" --file ledger_raw.json --remote || echo "R2 not enabled yet — backups will start automatically once it is"
+      - name: Commit ledger + outputs
+        if: steps.poll.outputs.changed != '0' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "psi-bot" && git config user.email "bot@portnoy.pizza"
+          git add ledger_raw.json out/metrics.json out/reviews.json out/reviews.csv out/changelog.jsonl 2>/dev/null || true
+          git commit -m "data: $(head -c 120 out/status.json | tr -d '\n' | sed 's/.*message": "//' | sed 's/".*//')" || echo "nothing to commit"
+          git push
+      - name: Fail loudly if the poll failed
+        run: python3 -c "import json,sys; s=json.load(open('out/status.json')); print(s); sys.exit(0 if (s['ok'] and not s.get('stale')) else 1)"
