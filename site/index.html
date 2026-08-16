@@ -33,6 +33,12 @@
   header.top{padding:30px 0 18px;display:flex;align-items:flex-start;justify-content:space-between;gap:40px;border-bottom:2px solid var(--ink)}
   .brand{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.01em;line-height:1}
   .brand small{display:block;font-family:var(--body);font-weight:500;font-size:12px;letter-spacing:.05em;line-height:1.6;text-transform:uppercase;color:var(--ash);margin-top:10px;max-width:46ch}
+  .tagline{align-self:flex-end;text-align:right;font-size:14px;font-style:italic;color:var(--ash);line-height:1.35;max-width:30ch;padding-bottom:1px;text-wrap:balance}
+  .tagline b{color:var(--brick);font-weight:600}
+  @media (max-width:640px){
+    header.top{flex-direction:column;gap:10px;padding:24px 0 16px}
+    .tagline{align-self:flex-start;text-align:left}
+  }
   .stamp{margin-top:4px}
   .srow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--line)}
   .srow:last-of-type{border-bottom:0}
@@ -133,7 +139,7 @@
   .kpi.brick{background:var(--brick);border-color:var(--brick);color:#fff}
   .kpi.brick span{color:#F5D9D5}
   table{width:100%;border-collapse:collapse;font-size:13px}
-  th{font-family:var(--mono);font-weight:600;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ash);text-align:right;padding:6px 6px;border-bottom:1px solid var(--line)}
+  th{font-family:var(--mono);font-weight:600;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ash);text-align:right;padding:6px 6px;border-bottom:1px solid var(--line);line-height:1.4;vertical-align:bottom;white-space:nowrap}
   th:first-child,td:first-child{text-align:left}
   td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono);font-size:12px;white-space:nowrap}
   td.name{font-family:var(--body);font-size:13px;white-space:normal;text-align:left}
@@ -224,7 +230,8 @@
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand">portnoy<span style="color:var(--brick)">.</span>pizza<small>The Portnoy Score Index · what a Dave Portnoy pizza score is really worth</small></div>
+    <div class="brand">portnoy<span style="color:var(--brick)">.</span>pizza<small>The Portnoy Score Index</small></div>
+    <div class="tagline">What a Dave Portnoy pizza score is <b>really</b> worth.</div>
   </header>
   <nav class="tabs" id="tabs">
     <a href="#index" data-view="index" class="active">The index</a>
@@ -339,16 +346,21 @@
   <!-- ============ VIEW: ALL REVIEWS ============ -->
   <div class="view" id="view-reviews">
   <section>
+    <div class="verdict" id="verdict2"></div>
+  </section>
+
+  <section>
     <h2>All reviews</h2>
-    <div class="tablewrap"><table id="ledger"><thead><tr><th>Review</th><th>Score</th><th>Pct then</th><th>Today's terms</th></tr></thead><tbody></tbody></table></div>
+    <p class="tr-note" style="margin:0 0 10px"><b>All-time %</b> — where the score ranks among every calibration score since 2013.<br><b>All-time adjusted</b> — the score's percentile within its own year, re-expressed across all time.</p>
+    <div class="tablewrap"><table id="ledger"><thead><tr><th>Review</th><th>Score</th><th title="Where the score ranks among every calibration score since 2013">All-time %</th><th title="The score's percentile within its own year, re-expressed across every calibration score since 2013">All-time<br>adjusted</th></tr></thead><tbody></tbody></table></div>
     <button class="more" id="more">Show 50 more</button>
   </section>
 
   <section>
     <h2>Ledger key</h2>
     <div class="lkey">
-      <div class="krow"><span class="kname">Pct then</span><span class="kdef">The score's percentile within its own calendar year.</span></div>
-      <div class="krow"><span class="kname">Today's terms</span><span class="kdef">The score at that same percentile in the last 12 months.</span></div>
+      <div class="krow"><span class="kname">All-time %</span><span class="kdef">Where the score ranks among every calibration score since 2013.</span></div>
+      <div class="krow"><span class="kname">All-time adjusted</span><span class="kdef">The score's percentile within its own year, re-expressed across all time.</span></div>
       <div class="krow"><span class="kname"><span class="badge">protest</span></span><span class="kdef">Below 1.0 — excluded from calibration.</span></div>
       <div class="krow"><span class="kname"><span class="badge grey">archival</span></span><span class="kdef">Retro-logged 2013–15 — excluded.</span></div>
       <div class="krow"><span class="kname"><span class="badge grey">unresolved</span></span><span class="kdef">Venue record missing upstream — score counted.</span></div>
@@ -447,6 +459,7 @@
       <div class="fact"><b>${fmt1(eq19)}</b><span>in ${BASE} terms</span></div>
     </div>
     <p class="line">${art(L.score)} ${fmt1(L.score)} right now beats ${Math.round(pL)}% of what he's scored in the past year (${W.length} reviews). At the same percentile, that's ${art(eq19).toLowerCase()} ${fmt1(eq19)} in ${BASE} and ${art(eq17).toLowerCase()} ${fmt1(eq17)} in 2017.</p>`;
+  document.getElementById('verdict2').innerHTML = document.getElementById('verdict').innerHTML;  // same card atop All reviews
   document.getElementById('lede').innerHTML = `People hear <b>${fmt1(L.score)}</b> and expect a 9. He has given <b>${D.nines.by_year[years[years.length-1]]||0}</b> nines this year and <b>${D.regime.count_ge_9}</b> in the last twelve months. Under his current scale, ${art(L.score).toLowerCase()} ${fmt1(L.score)} is ${gL.toLowerCase()==='elite'||gL.toLowerCase()==='rarefied air'?'not a letdown. It is the top of the board.':'exactly what it says.'}`;
 
   // ---- translator ----
@@ -548,14 +561,15 @@
 
   // ---- ledger ----
   const led = LEDGER.slice().reverse(); let shown=0; const tb=document.querySelector('#ledger tbody');
+  const ALLCAL = [].concat(...Object.values(D.by_year)).sort((a,b)=>a-b);  // every calibration score, all time
   function addRows(n){
     let html='';
     for(let i=shown;i<Math.min(shown+n,led.length);i++){ const r=led[i];
-      const excluded = (r.flags&1)||(r.flags&2); const p = excluded?null:pctInYear(r.date,r.score); const today = p==null?null:quantile(W,p/100);
+      const excluded = (r.flags&1)||(r.flags&2); const p = excluded?null:pctInYear(r.date,r.score); const ap = excluded?null:pctRank(ALLCAL,r.score); const alltime = p==null?null:quantile(ALLCAL,p/100);
       const u = url(r);
       const name = r.venue?(u?`<a href="${u}" target="_blank" rel="noopener">${r.venue}</a>`:r.venue):`<span class="muted">Venue record missing</span>`;
       const badges = (r.flags&1?'<span class="badge">protest</span>':'')+(r.flags&2?'<span class="badge grey">archival</span>':'')+(r.flags&4?'<span class="badge grey">unresolved</span>':'');
-      html+=`<tr><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td><td>${p==null?'—':ord(Math.round(p))}</td><td class="tt">${today==null?'—':fmt1(today)}</td></tr>`; }
+      html+=`<tr><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td><td>${ap==null?'—':ord(Math.round(ap))}</td><td class="tt">${alltime==null?'—':fmt1(alltime)}</td></tr>`; }
     tb.insertAdjacentHTML('beforeend',html); shown=Math.min(shown+n,led.length);
     document.getElementById('more').style.display = shown>=led.length?'none':'block';
     document.getElementById('more').textContent = `Show 50 more (${(led.length-shown).toLocaleString()} remaining)`;
