@@ -92,7 +92,7 @@
   .translator{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px 16px 16px}
   .tr-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
   .tr-score{font-family:var(--display);font-weight:800;font-size:72px;line-height:.9;letter-spacing:-.02em;min-width:120px}
-  .tr-score input{font:inherit;width:2.4ch;border:0;border-bottom:3px solid var(--brick);background:transparent;color:var(--ink);padding:0;outline:none;text-align:left}
+  .tr-score input{font:inherit;width:3.5ch;border:0;border-bottom:3px solid var(--brick);background:transparent;color:var(--ink);padding:0;outline:none;text-align:left}
   .tr-score input:focus{border-bottom-color:var(--ink)}
   .tr-read{text-align:right}
   .tr-read .pct{font-family:var(--display);font-weight:700;font-size:34px;line-height:1}
@@ -106,7 +106,8 @@
   input[type=range]::-moz-range-track{height:2px;background:var(--ink)}
   input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--brick);border:3px solid #fff;box-shadow:0 0 0 1px var(--ink)}
   input[type=range]:focus-visible{outline:2px solid var(--brick);outline-offset:8px}
-  .ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--ash);margin-top:2px}
+  .ticks{position:relative;height:14px;font-family:var(--mono);font-size:10px;color:var(--ash);margin-top:2px}
+  .ticks span{position:absolute;top:0;transform:translateX(-50%)}
   .equiv{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}
   .eq{background:var(--paper);border-radius:4px;padding:8px 6px;text-align:center}
   .eq b{display:block;font-family:var(--display);font-weight:700;font-size:24px;line-height:1}
@@ -244,9 +245,9 @@
       </div>
       <div class="rail">
         <svg id="railSvg" viewBox="0 0 700 64" preserveAspectRatio="none" aria-hidden="true"></svg>
-        <input type="range" id="scoreRange" min="0" max="10" step="0.1" value="8.0" aria-label="Drag to choose a score">
+        <input type="range" id="scoreRange" min="0" max="1" step="0.002" value="0.71" aria-label="Drag to choose a score">
       </div>
-      <div class="ticks"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+      <div class="ticks"><span style="left:0;transform:none">0</span><span style="left:2.8%">1</span><span style="left:5.6%">2</span><span style="left:8.4%">3</span><span style="left:11.2%">4</span><span style="left:14%">5</span><span style="left:33%">6</span><span style="left:52%">7</span><span style="left:71%">8</span><span style="left:90%">9</span><span style="left:100%;transform:translateX(-100%)">10</span></div>
       <p class="tr-note" id="trNote"></p>
       <div class="equiv" id="equiv"></div>
       <p class="tr-note">Same percentile, different year. Grey ticks on the rail are every score he gave in the last 12 months. The outlined year is the base year for the one-line verdict.</p>
@@ -442,8 +443,12 @@
   // ---- translator ----
   const inp = document.getElementById('scoreInput'), rng = document.getElementById('scoreRange');
   const railSvg = document.getElementById('railSvg');
+  // piecewise rail scale — [score, position] breakpoints: 0–5 squeezed left, 5–9 stretched, 9–10 squeezed right
+  const BP=[[0,0],[5,.14],[9,.90],[10,1]];
+  const sx = s => { for(let i=1;i<BP.length;i++){ const [s0,f0]=BP[i-1],[s1,f1]=BP[i]; if(s<=s1) return f0+(s-s0)/(s1-s0)*(f1-f0); } return 1; };
+  const xs = f => { for(let i=1;i<BP.length;i++){ const [s0,f0]=BP[i-1],[s1,f1]=BP[i]; if(f<=f1) return s0+(f-f0)/(f1-f0)*(s1-s0); } return 10; };
   function drawRail(){
-    const x = s => 10 + (s/10)*680; let out = '';
+    const x = s => 10 + sx(s)*680; let out = '';
     const counts = {}; for(const v of W){ const k=fmt1(v); counts[k]=(counts[k]||0)+1; }
     for(const k in counts){ const h = Math.min(30, 4 + counts[k]*4); out += `<line x1="${x(+k)}" x2="${x(+k)}" y1="${34-h}" y2="34" stroke="#B4B9AE" stroke-width="3" />`; }
     const med = quantile(W,.5), p90 = quantile(W,.9);
@@ -453,7 +458,7 @@
   }
   function render(sRaw){
     let s = Math.max(0, Math.min(10, Math.round((+sRaw||0)*10)/10));
-    rng.value = s; if(document.activeElement!==inp) inp.value = fmt1(s);
+    rng.value = sx(s); if(document.activeElement!==inp) inp.value = fmt1(s);
     const p = pctRank(W, s), g = grade(p); const above = s > wmax+1e-9;
     document.getElementById('trPct').innerHTML = above ? `>100<small>th</small>` : `${Math.round(p)}<small>${ord(Math.round(p)).replace(/\d+/,'')} pct</small>`;
     document.getElementById('trGrade').innerHTML = `<span class="grade" style="margin-top:0">${g}</span>`;
@@ -465,7 +470,7 @@
     for(const y of years){ const arr = D.by_year[y]; if(arr.length<30) continue; const e = quantile(arr, p/100); eqHtml += `<div class="eq ${y===BASE?'base':''}"><b>${fmt1(e)}</b><span>${y}${y===years[years.length-1]?' YTD':''}</span></div>`; }
     document.getElementById('equiv').innerHTML = eqHtml;
   }
-  rng.addEventListener('input', e=>render(e.target.value));
+  rng.addEventListener('input', e=>render(xs(+e.target.value)));
   inp.addEventListener('input', e=>{ const v = parseFloat(e.target.value); if(!isNaN(v)) render(v); });
   inp.addEventListener('blur', e=>render(e.target.value));
   document.getElementById('quick').innerHTML = [6.5,7.0,7.5,8.0,8.5,9.0,L.score].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b).map(v=>`<button data-v="${v}">${fmt1(v)}${v===L.score?' · latest':''}</button>`).join('');
