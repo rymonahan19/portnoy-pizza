@@ -136,6 +136,7 @@
   td.name{font-family:var(--body);font-size:13px;white-space:normal;text-align:left}
   td.name span{display:block;color:var(--ash);font-size:11px}
   td .s{font-family:var(--display);font-weight:700;font-size:18px}
+  td.tt{font-size:14px;font-weight:600}
   .badge{display:inline-block;font:600 9px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:2px 5px;border-radius:2px;background:var(--brick-soft);color:var(--brick);margin-left:6px;vertical-align:1px}
   .badge.grey{background:#E4E6E0;color:var(--ash)}
   .badge.gold{background:var(--gold-soft);color:#7A5F1E}
@@ -282,7 +283,7 @@
   </section>
 
   <section>
-    <h2>Ledger</h2>
+    <h2>All reviews</h2>
     <div class="tablewrap"><table id="ledger"><thead><tr><th>Review</th><th>Score</th><th>Pct then</th><th>Today's terms</th></tr></thead><tbody></tbody></table></div>
     <button class="more" id="more">Show 50 more</button>
   </section>
@@ -546,7 +547,7 @@
       const u = url(r);
       const name = r.venue?(u?`<a href="${u}" target="_blank" rel="noopener">${r.venue}</a>`:r.venue):`<span class="muted">Venue record missing</span>`;
       const badges = (r.flags&1?'<span class="badge">protest</span>':'')+(r.flags&2?'<span class="badge grey">archival</span>':'')+(r.flags&4?'<span class="badge grey">unresolved</span>':'');
-      html+=`<tr><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td><td>${p==null?'—':ord(Math.round(p))}</td><td>${today==null?'—':fmt1(today)}</td></tr>`; }
+      html+=`<tr><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td><td>${p==null?'—':ord(Math.round(p))}</td><td class="tt">${today==null?'—':fmt1(today)}</td></tr>`; }
     tb.insertAdjacentHTML('beforeend',html); shown=Math.min(shown+n,led.length);
     document.getElementById('more').style.display = shown>=led.length?'none':'block';
     document.getElementById('more').textContent = `Show 50 more (${(led.length-shown).toLocaleString()} remaining)`;
