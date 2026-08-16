@@ -5,9 +5,9 @@ pages_build_output_dir = "site"
 
 [[kv_namespaces]]
 binding = "PSI_DATA"
-id = "b90a2a5a7fbf44b5ac1af0b6d0fc00ac"            # created 2026-08-16: psi-data
+id = "1b126b76c84a457ba661f12b3ce936ac"            # created 2026-08-16: psi-data
 
 [[d1_databases]]
 binding = "PSI_DB"
 database_name = "psi"
-database_id = "dd27023a-5b94-4a34-bd4c-d08d520336d8"   # created 2026-08-16 (ENAM); tables: reviews, blobs, changelog
+database_id = "7519813c-f895-4fe7-897f-13cac5ca31fd"   # created 2026-08-16 (ENAM); tables: reviews, blobs, changelog
