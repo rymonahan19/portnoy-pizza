@@ -72,6 +72,9 @@
   .pcell b{display:block;font-family:var(--display);font-weight:800;font-size:18px;line-height:1}
   .pcell span{display:block;font-family:var(--mono);font-size:12px;font-weight:600;margin-top:3px}
   .grades .grow,.pcell{cursor:pointer}
+  .verdict .fact.vhigher{cursor:pointer}
+  .verdict .fact.vhigher span{text-decoration:underline dotted;text-underline-offset:3px}
+  .verdict .fact.vhigher:hover b{color:#F2C4BE}
   .grades .grow:hover .gname,.pcell:hover b{color:var(--brick)}
   .detail{margin-top:12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);max-height:340px;overflow-y:auto}
   .detail .dhead{position:sticky;top:0;background:var(--panel);display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ash);border-bottom:1px solid var(--line)}
@@ -124,6 +127,11 @@
   .sclear{font:600 10px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:#FF5A4E;background:none;border:0;cursor:pointer;margin-left:8px}
   .sshare{display:block;width:100%;margin-top:10px;font:700 14px var(--display);letter-spacing:.08em;text-transform:uppercase;background:var(--brick);color:#fff;border:0;border-radius:4px;padding:12px;cursor:pointer}
   .sshare:hover{filter:brightness(1.1)}
+  .tover{position:fixed;inset:0;z-index:2000;background:rgba(10,11,12,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
+  .tover img{max-width:100%;max-height:76vh;border-radius:8px;box-shadow:0 12px 44px rgba(0,0,0,.55)}
+  .tbar{display:flex;gap:10px}
+  .tsave{font:700 13px var(--display);letter-spacing:.06em;text-transform:uppercase;background:var(--brick);color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px}
+  .tclose{font:700 13px var(--display);letter-spacing:.06em;text-transform:uppercase;background:#fff;color:var(--ink);border:0;padding:10px 16px;border-radius:4px;cursor:pointer}
   @media (max-width:640px){.dgrid{grid-template-columns:repeat(2,1fr)}}
   @media (max-width:420px){
     .grow{grid-template-columns:104px 1fr 50px;gap:10px}
@@ -310,6 +318,7 @@
   <div class="view" id="view-index">
   <section>
     <div class="verdict" id="verdict"></div>
+    <div class="detail" id="vdetail" hidden></div>
     <p class="lede" id="lede"></p>
   </section>
 
@@ -422,6 +431,7 @@
   <section>
     <h2>Latest review</h2>
     <div class="verdict" id="verdict2"></div>
+    <div class="detail" id="vdetail2" hidden></div>
   </section>
 
   <section>
@@ -728,8 +738,12 @@
         if(navigator.canShare && navigator.canShare({files:[file]})){
           try{ await navigator.share({files:[file], title:'My portnoy.pizza slip'}); return; }catch(e){ if(e && e.name==='AbortError') return; }
         }
-        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='portnoy-pizza-slip.png';
-        document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+        // preview overlay with explicit save + close
+        const u=URL.createObjectURL(blob);
+        const ov=document.createElement('div'); ov.className='tover';
+        ov.innerHTML=`<div class="tbar"><a class="tsave" href="${u}" download="portnoy-pizza-slip.png">⬇ Save image</a><button class="tclose">✕ Close</button></div><img src="${u}" alt="Your bet slip">`;
+        document.body.appendChild(ov);
+        ov.addEventListener('click',e=>{ if(e.target===ov || e.target.closest('.tclose')){ ov.remove(); URL.revokeObjectURL(u); } });
       },'image/png');
     }
     el.addEventListener('click',e=>{
@@ -779,6 +793,19 @@
     panel.hidden=false; panel.scrollTop=0; gOpen=idx; ensureVisible(panel);
   });
   document.getElementById('gdetail').addEventListener('click',e=>{ if(e.target.closest('.dclose')){ const p=document.getElementById('gdetail'); p.hidden=true; p.innerHTML=''; gOpen=null; } });
+  // ---- tap "higher scores this year" on either latest-review card ----
+  function showHigher(panelId){
+    const p=document.getElementById(panelId); if(!p) return;
+    if(!p.hidden){ p.hidden=true; p.innerHTML=''; return; }
+    const rows=LEDGER.filter(r=>!(r.flags&1)&&!(r.flags&2) && r.date>CUT365 && r.score>D.latest.score+1e-9).sort((a,b)=>b.score-a.score||b.date.localeCompare(a.date));
+    p.innerHTML=detailHTML(`Higher than ${fmt1(D.latest.score)} · last 12 months · ${rows.length}`, rows);
+    p.hidden=false; p.scrollTop=0; ensureVisible(p);
+  }
+  [['verdict','vdetail'],['verdict2','vdetail2']].forEach(([cid,pid])=>{
+    const card=document.getElementById(cid); if(!card) return;
+    card.addEventListener('click',e=>{ if(e.target.closest('.vhigher')) showHigher(pid); });
+    document.getElementById(pid).addEventListener('click',e=>{ if(e.target.closest('.dclose')){ const p=document.getElementById(pid); p.hidden=true; p.innerHTML=''; } });
+  });
   // ---- every-score periodic table, with its own period selector ----
   // Draws from the FULL archive (protest + archival included), unlike the calibration-only stats above —
   // this is the census, so the lone 10 and the sub-1.0 protests belong in it.
@@ -827,7 +854,7 @@
     <div class="grade">${gL}</div>
     <div class="facts">
       <div class="fact"><b>${Math.round(pL)}<span style="font-size:14px;color:#B9BDB6;text-transform:none;letter-spacing:0">${ord(Math.round(pL)).replace(/\d+/,'')}</span></b><span>percentile, last 12 mo</span></div>
-      <div class="fact"><b>${higher}</b><span>higher scores this year</span></div>
+      <div class="fact vhigher" role="button" tabindex="0" title="See the list"><b>${higher}</b><span>higher scores this year</span></div>
       <div class="fact"><b>${fmt1(eq19)}</b><span>in ${BASE} terms</span></div>
     </div>
     <p class="line">${art(L.score)} ${fmt1(L.score)} right now beats ${Math.round(pL)}% of what he's scored in the past year (${W.length} reviews). At the same percentile, that's ${art(eq19).toLowerCase()} ${fmt1(eq19)} in ${BASE} and ${art(eq17).toLowerCase()} ${fmt1(eq17)} in 2017.</p>`;
