@@ -223,6 +223,10 @@
   .badge.grey{background:#E4E6E0;color:var(--ash)}
   .badge.gold{background:var(--gold-soft);color:#7A5F1E}
   .tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 8px;overflow-x:auto}
+  .lsearch{display:flex;gap:8px;margin:0 0 4px}
+  .lsearch input{flex:1;font:15px var(--body);padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);min-width:0}
+  .lsearch input:focus{outline:none;border-color:var(--ink)}
+  .lsearch button{font:700 14px var(--mono);border:1px solid var(--line);background:#fff;border-radius:4px;padding:0 14px;cursor:pointer;color:var(--ash)}
   .more{display:block;width:100%;margin-top:10px;font:600 13px var(--body);padding:10px;border:1px solid var(--ink);background:#fff;border-radius:4px;cursor:pointer}
   .method p{margin:8px 0;font-size:14px}
   .method b{font-weight:600}
@@ -437,6 +441,8 @@
   <section>
     <h2>All reviews</h2>
     <p class="tr-note" style="margin:0 0 10px"><b>All-time %</b> — where the score ranks among every calibration score since 2013.<br><b>All-time adjusted</b> — the score's percentile within its own year, re-expressed across all time.</p>
+    <div class="lsearch"><input id="ledgerSearch" type="search" placeholder="Find your local scores — city or state" aria-label="Search reviews by city or state"><button id="ledgerClear" hidden aria-label="Clear search">✕</button></div>
+    <p class="tr-note" id="lsCount" style="margin:6px 0 8px"></p>
     <div class="tablewrap"><table id="ledger"><thead><tr><th>Review</th><th>Score</th><th title="Where the score ranks among every calibration score since 2013">All-time %</th><th title="The score's percentile within its own year, re-expressed across every calibration score since 2013">All-time<br>adjusted</th></tr></thead><tbody></tbody></table></div>
     <button class="more" id="more">Show 50 more</button>
   </section>
@@ -960,19 +966,38 @@
 
   // ---- ledger ----
   const led = LEDGER.slice().reverse(); let shown=0; const tb=document.querySelector('#ledger tbody');
+  function rowHTML(r){
+    const excluded = (r.flags&1)||(r.flags&2); const p = excluded?null:pctInYear(r.date,r.score); const ap = excluded?null:pctRank(ALLCAL,r.score); const alltime = p==null?null:quantile(ALLCAL,p/100);
+    const u = url(r);
+    const name = r.venue?(u?`<a href="${u}" target="_blank" rel="noopener">${r.venue}</a>`:r.venue):`<span class="muted">Venue record missing</span>`;
+    const badges = (r.flags&1?'<span class="badge">protest</span>':'')+(r.flags&2?'<span class="badge grey">archival</span>':'')+(r.flags&4?'<span class="badge grey">unresolved</span>':'');
+    return `<tr><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td><td>${ap==null?'—':ord(Math.round(ap))}</td><td class="tt">${alltime==null?'—':fmt1(alltime)}</td></tr>`;
+  }
   function addRows(n){
     let html='';
-    for(let i=shown;i<Math.min(shown+n,led.length);i++){ const r=led[i];
-      const excluded = (r.flags&1)||(r.flags&2); const p = excluded?null:pctInYear(r.date,r.score); const ap = excluded?null:pctRank(ALLCAL,r.score); const alltime = p==null?null:quantile(ALLCAL,p/100);
-      const u = url(r);
-      const name = r.venue?(u?`<a href="${u}" target="_blank" rel="noopener">${r.venue}</a>`:r.venue):`<span class="muted">Venue record missing</span>`;
-      const badges = (r.flags&1?'<span class="badge">protest</span>':'')+(r.flags&2?'<span class="badge grey">archival</span>':'')+(r.flags&4?'<span class="badge grey">unresolved</span>':'');
-      html+=`<tr><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td><td>${ap==null?'—':ord(Math.round(ap))}</td><td class="tt">${alltime==null?'—':fmt1(alltime)}</td></tr>`; }
+    for(let i=shown;i<Math.min(shown+n,led.length);i++) html+=rowHTML(led[i]);
     tb.insertAdjacentHTML('beforeend',html); shown=Math.min(shown+n,led.length);
     document.getElementById('more').style.display = shown>=led.length?'none':'block';
     document.getElementById('more').textContent = `Show 50 more (${(led.length-shown).toLocaleString()} remaining)`;
   }
   document.getElementById('more').addEventListener('click',()=>addRows(50));
+  // ---- find-your-local-store filter ----
+  const lsInput=document.getElementById('ledgerSearch'), lsClear=document.getElementById('ledgerClear'), lsCount=document.getElementById('lsCount');
+  if(lsInput){
+    const lnorm=s=>(s||'').toLowerCase().replace(/[\u2018\u2019'`\u00b4]/g,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    let lsT=null;
+    function lsRender(){
+      const raw=lsInput.value.trim(), q=lnorm(raw);
+      lsClear.hidden=!q;
+      if(!q){ tb.innerHTML=''; shown=0; addRows(40); lsCount.textContent=''; return; }
+      const hits=led.filter(r=>lnorm(r.city).includes(q)||lnorm(r.state).includes(q));
+      tb.innerHTML=hits.slice(0,200).map(rowHTML).join('');
+      document.getElementById('more').style.display='none';
+      lsCount.textContent = hits.length ? `${hits.length.toLocaleString()} match${hits.length===1?'':'es'}${hits.length>200?' — showing the first 200':''}` : `No reviews match “${raw}” — he may not have made it there yet.`;
+    }
+    lsInput.addEventListener('input',()=>{ clearTimeout(lsT); lsT=setTimeout(lsRender,140); });
+    lsClear.addEventListener('click',()=>{ lsInput.value=''; lsRender(); lsInput.focus(); });
+  }
   addRows(40);
 
   // ================= NEAR ME =================
