@@ -30,14 +30,11 @@
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
   a{color:inherit}
   .wrap{max-width:720px;margin:0 auto;padding:0 16px 10px}
-  header.top{padding:30px 0 18px;display:flex;align-items:flex-start;justify-content:space-between;gap:40px;border-bottom:2px solid var(--ink)}
+  header.top{padding:14px 0 10px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:2px solid var(--ink)}
   .brand{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.01em;line-height:1}
-  .brand small{display:block;font-family:var(--body);font-weight:500;font-size:12px;letter-spacing:.05em;line-height:1.6;text-transform:uppercase;color:var(--ash);margin-top:10px;max-width:46ch}
-  .tagline{align-self:flex-end;text-align:right;font-size:14px;font-style:italic;color:var(--ash);line-height:1.35;max-width:30ch;padding-bottom:1px;text-wrap:balance}
-  .tagline b{color:var(--brick);font-weight:600}
+  .brand-sub{font-family:var(--body);font-weight:500;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--ash);white-space:nowrap}
   @media (max-width:640px){
-    header.top{padding:24px 0 16px}
-    .tagline{display:none}
+    .brand-sub{font-size:10px;letter-spacing:.04em}
   }
   .stamp{margin-top:4px}
   .srow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--line)}
@@ -84,7 +81,13 @@
   .drow .dv{flex:1;font-size:13px}
   .drow .dv small{display:block;color:var(--ash);font-size:11px}
   /* year-to-date board */
-  .dash{background:var(--ink);border-radius:6px;padding:16px 14px 12px;color:#fff}
+  .dashbar{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--ink);color:#fff;border:0;border-radius:6px;padding:12px 14px;cursor:pointer;text-align:left}
+  .dbteaser{font:600 12px var(--mono);letter-spacing:.02em;line-height:1.6}
+  .dbteaser b{font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.05em;margin-right:8px}
+  .dbteaser .up{color:#35C759}.dbteaser .down{color:#FF5A4E}.dbteaser .odds{color:#35C759;font-weight:700}
+  .dbchev{font-size:14px;color:#B9BDB6;transition:transform .18s ease}
+  .dashbar[aria-expanded="true"] .dbchev{transform:rotate(180deg)}
+  .dash{background:var(--ink);border-radius:6px;padding:16px 14px 12px;color:#fff;margin-top:8px}
   .dash .dbar{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0 2px 12px}
   .dash .dbar b{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.04em;text-transform:uppercase}
   .dash .dbar span{font:600 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:#B9BDB6}
@@ -96,6 +99,27 @@
   .dtile .dd{font:600 11px var(--mono);margin-top:4px}
   .dd.up{color:#35C759}.dd.down{color:#FF5A4E}.dd.flat{color:#B9BDB6}
   .dash .dnote{font:10.5px var(--mono);color:#8A8F94;margin:10px 2px 0;line-height:1.5}
+  .props{margin-top:14px}
+  .ptitle{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#B9BDB6;margin:0 2px 7px}
+  .prow{display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid #35383B;border-radius:5px;padding:8px 10px;margin-bottom:6px}
+  .plab{font-size:13px;flex:1;line-height:1.35}
+  .pbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .obtn{font:700 12px var(--mono);color:#35C759;background:rgba(53,199,89,.08);border:1px solid rgba(53,199,89,.35);border-radius:4px;padding:5px 10px;cursor:pointer;min-width:62px;text-align:center}
+  .obtn small{display:block;font:600 8.5px var(--mono);letter-spacing:.05em;color:#B9BDB6;text-transform:uppercase}
+  .obtn.picked{background:#35C759;color:#0B0C0D;border-color:#35C759}
+  .obtn.picked small{color:rgba(0,0,0,.55)}
+  .oustep{display:inline-flex;align-items:center;gap:7px;margin-left:8px;vertical-align:middle}
+  .oustep b{font-family:var(--display);font-size:16px}
+  .step{font:700 14px var(--mono);color:#fff;background:rgba(255,255,255,.1);border:1px solid #4A4D50;border-radius:3px;width:22px;height:22px;line-height:1;cursor:pointer;padding:0}
+  .slip{margin-top:10px;border:1px dashed #4A4D50;border-radius:5px;padding:10px 12px}
+  .slip .semp{font:11px var(--mono);color:#8A8F94}
+  .slip .srow{display:flex;justify-content:space-between;gap:10px;font:12px var(--mono);color:#E9EBE6;padding:3px 0}
+  .slip .srow b{color:#35C759}
+  .slip .stotal{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid #35383B;margin-top:7px;padding-top:9px;font:600 12px var(--mono)}
+  .slip .stotal .odds{color:#35C759}
+  .sclear{font:600 10px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:#FF5A4E;background:none;border:0;cursor:pointer;margin-left:8px}
+  .sshare{display:block;width:100%;margin-top:10px;font:700 14px var(--display);letter-spacing:.08em;text-transform:uppercase;background:var(--brick);color:#fff;border:0;border-radius:4px;padding:12px;cursor:pointer}
+  .sshare:hover{filter:brightness(1.1)}
   @media (max-width:640px){.dgrid{grid-template-columns:repeat(2,1fr)}}
   @media (max-width:420px){
     .grow{grid-template-columns:104px 1fr 50px;gap:10px}
@@ -267,8 +291,8 @@
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand">portnoy<span style="color:var(--brick)">.</span>pizza<small>The Portnoy Score Index</small></div>
-    <div class="tagline">What a Dave Portnoy pizza score is <b>really</b> worth.</div>
+    <div class="brand">portnoy<span style="color:var(--brick)">.</span>pizza</div>
+    <div class="brand-sub">The Portnoy Score Index</div>
   </header>
   <nav class="tabs" id="tabs">
     <a href="#reviews" data-view="reviews" class="active">Reviews</a>
@@ -283,11 +307,6 @@
   <section>
     <div class="verdict" id="verdict"></div>
     <p class="lede" id="lede"></p>
-  </section>
-
-  <section>
-    <h2>Year to date</h2>
-    <div class="dash" id="dash"></div>
   </section>
 
   <section>
@@ -387,6 +406,14 @@
 
   <!-- ============ VIEW: ALL REVIEWS ============ -->
   <div class="view active" id="view-reviews">
+  <section>
+    <button class="dashbar" id="dashToggle" aria-expanded="false" aria-controls="dash">
+      <span class="dbteaser" id="dashTeaser"></span>
+      <span class="dbchev" aria-hidden="true">▾</span>
+    </button>
+    <div class="dash" id="dash" hidden></div>
+  </section>
+
   <section>
     <div class="verdict" id="verdict2"></div>
   </section>
@@ -584,6 +611,28 @@
     let since=0, lastNine=null;
     for(let i=LEDGER.length-1;i>=0;i--){ if(LEDGER[i].score>=9){ lastNine=LEDGER[i]; break; } since++; }
     const tile=(l,v,d='',odds=false)=>`<div class="dtile"><div class="dl">${l}</div><div class="dvv${odds?' odds':''}">${v}</div>${d}</div>`;
+    // ---- prop math ----
+    const r5=x=>Math.max(100,Math.round(x/5)*5);
+    const pOver=t=>{ const k=W.filter(s=>s>=t-1e-9).length; return (k+1)/(n+2); };
+    const pUnderF=t=>{ const k=W.filter(s=>s<t-1e-9).length; return (k+1)/(n+2); };
+    const amer=p=> p>=0.5 ? '-'+r5(100*p/(1-p)) : '+'+r5(100*(1-p)/p);
+    const cut365=new Date(new Date(D.as_of).getTime()-365*86400000).toISOString().slice(0,10);
+    const L12=LEDGER.filter(r=>cal(r)&&r.date>cut365);
+    const stateCounts={}; for(const r of L12){ if(r.state) stateCounts[r.state]=(stateCounts[r.state]||0)+1; }
+    const topStates=Object.entries(stateCounts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([s,c])=>({s, p:(c+1)/(L12.length+2)}));
+    const lastR=LEDGER[LEDGER.length-1];
+    const pBeat=(W.filter(s=>s>lastR.score+1e-9).length+1)/(n+2);
+    const modeK=(()=>{ const m={}; for(const s of W) m[fmt1(s)]=(m[fmt1(s)]||0)+1; return Object.entries(m).sort((a,b)=>b[1]-a[1])[0]; })();
+    const pExact=(modeK[1]+1)/(n+2);
+    const doy=Math.max(1,Math.round((new Date(D.as_of)-new Date(yNow+'-01-01'))/86400000)+1);
+    const remRev=Math.max(0,Math.round(cur.length/doy*(365-doy)));
+    const pNineSeason=1-Math.pow(1-pOver(9), remRev);
+    const projTotal=cur.length+remRev, seasonLine=projTotal+0.5;
+    let ouLine=7.5;
+    const obtn=(id,top,p)=>`<button class="obtn" data-pid="${id}" data-label="${id}" data-p="${p}"><small>${top}</small>${amer(p)}</button>`;
+    const prow=(lab,btns)=>`<div class="prow"><span class="plab">${lab}</span><span class="pbtns">${btns}</span></div>`;
+    function ouRow(){ const po=pOver(ouLine+0.05); return prow(`Next review — the line <span class="oustep"><button class="step" data-ou="-1">−</button><b id="ouLine">${ouLine.toFixed(1)}</b><button class="step" data-ou="1">+</button></span>`,
+      obtn(`Over ${ouLine.toFixed(1)}`,'OVER',po)+obtn(`Under ${ouLine.toFixed(1)}`,'UNDER',1-po)); }
     el.innerHTML =
       `<div class="dbar"><b>${yNow} season</b><span>through ${md.replace('-','/')} · vs same point ${yPrev}</span></div>`+
       `<div class="dgrid">`+
@@ -591,12 +640,110 @@
       tile('Avg score', avg(cur).toFixed(2), delta(avg(cur)-avg(prev), x=>x.toFixed(2)))+
       tile('Season high', fmt1(hiOf(cur)), delta(hiOf(cur)-hiOf(prev), x=>x.toFixed(1)))+
       tile('8.0+ hits', `${c8(cur)}`, delta(c8(cur)-c8(prev), null))+
-      tile('Next review 9.0+', amOdds(9), '', true)+
-      tile('Next review 8.5+', amOdds(8.5), '', true)+
-      tile('Next review 8.0+', amOdds(8), '', true)+
+      (()=>{ const l10=LEDGER.filter(cal).slice(-10).map(r=>r.score); const a10=l10.reduce((s,x)=>s+x,0)/l10.length; const dF=a10-(W.reduce((s,x)=>s+x,0)/n);
+        const badge=dF>=0.15?'<div class="dd up">🔥 HOT</div>':dF<=-0.15?'<div class="dd" style="color:#6FB7FF">🧊 COLD</div>':'<div class="dd flat">— STEADY</div>';
+        return tile('Form · last 10', a10.toFixed(2), badge); })()+
+      tile('Pace · proj total', projTotal, `<div class="dd flat">${remRev} reviews left</div>`)+
       tile('9.0 drought', since.toLocaleString(), `<div class="dd flat">reviews since ${lastNine?lastNine.date.slice(0,4):'—'}</div>`)+
+      tile('Best price · 9.0+', amOdds(9), '', true)+
       `</div>`+
-      `<div class="dnote">Odds are empirical, smoothed from his last ${n} scores — for fun, not a sportsbook. YTD figures use calibration reviews only.</div>`;
+      `<div class="props"><div class="ptitle">Prop board — tap odds to build a parlay</div>`+
+      `<div id="ouWrap">${ouRow()}</div>`+
+      prow('Next review goes 8.0+', obtn('Next 8.0+','YES',pOver(8)))+
+      prow('Next review goes 8.5+', obtn('Next 8.5+','YES',pOver(8.5)))+
+      prow('Next review goes 9.0+', obtn('Next 9.0+','YES',pOver(9)))+
+      prow('Next review stinks (under 7.0)', obtn('Next under 7.0','YES',pUnderF(7)))+
+      prow(`Beats the last score (${fmt1(lastR.score)} at ${lastR.venue||'last stop'})`, obtn(`Beats ${fmt1(lastR.score)}`,'YES',pBeat))+
+      prow(`Lands exactly on ${modeK[0]} — his favorite number`, obtn(`Exactly ${modeK[0]}`,'YES',pExact))+
+      prow('Next review state', topStates.map(t=>obtn(`Next in ${t.s}`,t.s.length>12?t.s.slice(0,10)+'…':t.s,t.p)).join(''))+
+      prow(`A 9.0 lands before Jan 1 (~${remRev} reviews left)`, obtn('9.0 in '+yNow,'YES',pNineSeason)+obtn('No 9.0 in '+yNow,'NO',1-pNineSeason))+
+      prow(`Season total reviews O/U ${seasonLine}`, obtn(`Season over ${seasonLine}`,'OVER',0.5)+obtn(`Season under ${seasonLine}`,'UNDER',0.5))+
+      `</div>`+
+      `<div class="slip" id="slip"><div class="semp">Your slip is empty — tap any odds to add a leg.</div></div>`+
+      `<div class="dnote">Odds are empirical, smoothed from his last ${n} scores; parlays assume independent legs. For fun — not a sportsbook. YTD figures use calibration reviews only.</div>`;
+    // ---- bet slip ----
+    const legs=new Map();
+    function renderSlip(){
+      const s=document.getElementById('slip');
+      if(!legs.size){ s.innerHTML='<div class="semp">Your slip is empty — tap any odds to add a leg.</div>'; return; }
+      let pAll=1, rows='';
+      for(const [id,leg] of legs){ pAll*=leg.p; rows+=`<div class="srow"><span>${id}</span><b>${amer(leg.p)}</b></div>`; }
+      const pay=(10/pAll);
+      s.innerHTML = rows + `<div class="stotal"><span>${legs.size===1?'STRAIGHT':legs.size+'-LEG PARLAY'} <b class="odds">${amer(pAll)}</b></span><span>$10 pays <b>$${pay>=1000?Math.round(pay).toLocaleString():pay.toFixed(0)}</b> <button class="sclear" id="sclear">clear</button></span></div>`+
+        `<button class="sshare" id="sshare">📸 Share this slip</button>`;
+    }
+    function shareSlip(){
+      if(!legs.size) return;
+      const c=document.createElement('canvas'); c.width=1080; c.height=1920; const x=c.getContext('2d');   // Instagram story
+      const DISP='"Barlow Condensed","Arial Narrow",sans-serif', MONO='"IBM Plex Mono",Menlo,monospace';
+      x.fillStyle='#17181A'; x.fillRect(0,0,1080,1920);
+      x.fillStyle='#A6231A'; x.fillRect(0,0,1080,18);
+      // logo (kept clear of the story UI's top zone)
+      x.textBaseline='alphabetic'; x.font='800 104px '+DISP;
+      let lx=80; x.fillStyle='#fff'; x.fillText('portnoy',lx,330); lx+=x.measureText('portnoy').width;
+      x.fillStyle='#A6231A'; x.fillText('.',lx,330); lx+=x.measureText('.').width;
+      x.fillStyle='#fff'; x.fillText('pizza',lx,330);
+      x.font='600 28px '+MONO; x.fillStyle='#B9BDB6';
+      x.fillText('THE PORTNOY SCORE INDEX · '+D.as_of,82,390);
+      // headline
+      let pAll=1; for(const [,l] of legs) pAll*=l.p;
+      const pay=10/pAll;
+      x.font='800 96px '+DISP; x.fillStyle='#fff';
+      x.fillText(legs.size===1?'STRAIGHT BET':legs.size+'-LEG PARLAY',80,545);
+      x.fillStyle='#35C759';
+      const hw=x.measureText(legs.size===1?'STRAIGHT BET':legs.size+'-LEG PARLAY').width;
+      x.fillText(' '+amer(pAll),80+hw,545);
+      // legs
+      const top=630, bottom=1450, nL=legs.size;
+      const rowH=Math.min(108,Math.floor((bottom-top-(nL-1)*16)/nL));
+      let y=top;
+      for(const [id,l] of legs){
+        x.fillStyle='rgba(255,255,255,.06)'; x.fillRect(80,y,920,rowH);
+        x.fillStyle='#A6231A'; x.fillRect(80,y,8,rowH);
+        x.fillStyle='#fff'; x.font='600 '+Math.min(40,rowH-50)+'px "IBM Plex Sans",sans-serif';
+        x.fillText(id,116,y+rowH/2+13,620);
+        x.fillStyle='#35C759'; x.font='700 '+Math.min(42,rowH-48)+'px '+MONO; x.textAlign='right';
+        x.fillText(amer(l.p),968,y+rowH/2+14); x.textAlign='left';
+        y+=rowH+16;
+      }
+      // payout box — anchored just below the last leg
+      const py=Math.min(1480, y+30);
+      x.strokeStyle='#4A4D50'; x.setLineDash([10,8]); x.lineWidth=3; x.strokeRect(80,py,920,126); x.setLineDash([]);
+      x.fillStyle='#B9BDB6'; x.font='600 32px '+MONO; x.fillText('$10 PAYS',116,py+79);
+      x.fillStyle='#35C759'; x.font='800 72px '+DISP; x.textAlign='right';
+      x.fillText('$'+(pay>=1000?Math.round(pay).toLocaleString():pay.toFixed(0)),968,py+89); x.textAlign='left';
+      // footer (above the story UI's bottom zone)
+      x.fillStyle='#fff'; x.font='700 40px '+DISP; x.fillText('BUILD YOUR OWN SLIP AT',80,1700);
+      const fw=x.measureText('BUILD YOUR OWN SLIP AT ').width;
+      x.fillStyle='#A6231A'; x.fillText('PORTNOY.PIZZA',80+fw,1700);
+      x.fillStyle='#6B7075'; x.font='500 22px '+MONO; x.fillText('for fun · not a sportsbook',82,1746);
+      c.toBlob(async blob=>{
+        const file=new File([blob],'portnoy-pizza-slip.png',{type:'image/png'});
+        if(navigator.canShare && navigator.canShare({files:[file]})){
+          try{ await navigator.share({files:[file], title:'My portnoy.pizza slip'}); return; }catch(e){ if(e && e.name==='AbortError') return; }
+        }
+        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='portnoy-pizza-slip.png';
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+      },'image/png');
+    }
+    el.addEventListener('click',e=>{
+      const st=e.target.closest('.step');
+      if(st){ ouLine=Math.min(9.5,Math.max(5,ouLine+0.5*(+st.dataset.ou))); document.getElementById('ouWrap').innerHTML=ouRow(); return; }
+      if(e.target.id==='sclear'){ legs.clear(); el.querySelectorAll('.obtn.picked').forEach(b=>b.classList.remove('picked')); renderSlip(); return; }
+      if(e.target.closest('#sshare')){ shareSlip(); return; }
+      const b=e.target.closest('.obtn'); if(!b) return;
+      const id=b.dataset.pid;
+      if(legs.has(id)){ legs.delete(id); b.classList.remove('picked'); }
+      else { legs.set(id,{p:+b.dataset.p}); b.classList.add('picked'); }
+      renderSlip();
+    });
+    // minimized teaser bar + expand toggle
+    const teaser=document.getElementById('dashTeaser'), tog=document.getElementById('dashToggle');
+    if(teaser && tog){
+      const dN=cur.length-prev.length, dA=avg(cur)-avg(prev);
+      teaser.innerHTML = `<b>${yNow} season</b>${cur.length} reviews <span class="${dN>=0?'up':'down'}">${dN>=0?'▲':'▼'}${Math.abs(dN)}</span> · avg ${avg(cur).toFixed(2)} <span class="${dA>=0?'up':'down'}">${dA>=0?'▲':'▼'}${Math.abs(dA).toFixed(2)}</span> · next 9.0+ <span class="odds">${amOdds(9)}</span>`;
+      tog.addEventListener('click',()=>{ el.hidden=!el.hidden; tog.setAttribute('aria-expanded', String(!el.hidden)); });
+    }
   })();
   // ---- tap a grade row for the restaurants behind it ----
   function detailHTML(title, rows){
