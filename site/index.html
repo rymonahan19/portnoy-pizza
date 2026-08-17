@@ -279,6 +279,9 @@
   .lb-toggle{display:flex;gap:0;margin-top:16px;border:1px solid #4A4D50;border-radius:4px;overflow:hidden;width:max-content}
   .lb-toggle button{font:700 12px var(--display);letter-spacing:.08em;text-transform:uppercase;padding:8px 14px;border:0;background:transparent;color:#B9BDB6;cursor:pointer}
   .lb-toggle button.on{background:var(--gold);color:var(--ink)}
+  .lb-tabs{display:flex;gap:0;margin:8px 0 10px;border:1px solid var(--ink);border-radius:4px;overflow:hidden;width:max-content}
+  .lb-tabs button{font:700 12px var(--display);letter-spacing:.08em;text-transform:uppercase;padding:8px 16px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+  .lb-tabs button.on{background:var(--ink);color:#fff}
   .ten{margin-top:14px;background:var(--panel);border:1px solid var(--gold);border-radius:6px;padding:18px 18px 16px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;position:relative}
   .ten::before{content:"THE ONLY 10";position:absolute;top:-9px;left:16px;background:var(--paper);padding:0 6px;font:700 10px var(--mono);letter-spacing:.14em;color:#7A5F1E}
   .ten .n{font-family:var(--display);font-weight:800;font-size:84px;line-height:.85;color:var(--gold)}
@@ -412,15 +415,23 @@
   <!-- ============ VIEW: LEADERBOARD ============ -->
   <div class="view" id="view-leaderboard">
   <section>
+    <div class="lb-tabs" role="tablist"><button data-t="top" class="on">Highest scores</button><button data-t="board">Score board</button></div>
     <div class="lb-head">
       <div class="eyebrow">All-time leaderboard</div>
-      <h1>The highest scores<br>he has ever given.</h1>
+      <h1 id="lbTitle">The highest scores<br>he has ever given.</h1>
       <p id="lbSub"></p>
       <div class="lb-toggle" role="tablist"><button data-m="raw" class="on">By score</button><button data-m="era">Era-adjusted</button></div>
     </div>
-    <div class="ten" id="ten"></div>
-    <div class="lb" id="lb"></div>
-    <p class="tr-note" id="lbNote"></p>
+    <div id="lbTop">
+      <div class="ten" id="ten"></div>
+      <div class="lb" id="lb"></div>
+      <p class="tr-note" id="lbNote"></p>
+    </div>
+    <div id="lbBoard" hidden>
+      <div class="tablewrap" style="margin-top:14px"><table id="board"><thead><tr><th title="Ties share a rank">Rank</th><th>Review</th><th>Score</th></tr></thead><tbody></tbody></table></div>
+      <button class="more" id="moreBoard">Show 50 more</button>
+      <p class="tr-note">Every review since 2013, ranked from №1 down to the lowest score he has ever given. Ties share a rank; earlier review listed first. Protest scores are excluded.</p>
+    </div>
   </section>
   </div>
 
@@ -1121,10 +1132,36 @@
   }
 
   // ================= LEADERBOARD =================
-  let lbMode='raw', lbInited=false;
+  let lbMode='raw', lbInited=false, lbTab='top';
   function lbInit(){ if(lbInited) return; lbInited=true;
     document.querySelector('.lb-toggle').addEventListener('click',e=>{ if(e.target.dataset.m){ lbMode=e.target.dataset.m; document.querySelectorAll('.lb-toggle button').forEach(b=>b.classList.toggle('on',b===e.target)); lbRender(); } });
+    document.querySelector('.lb-tabs').addEventListener('click',e=>{ if(e.target.dataset.t){ lbTab=e.target.dataset.t; document.querySelectorAll('.lb-tabs button').forEach(b=>b.classList.toggle('on',b===e.target)); lbTabRender(); } });
+    document.getElementById('moreBoard').addEventListener('click',()=>boardAdd(50));
     lbRender();
+  }
+  // ---- score board: every review ranked №1 → lowest (same competition ranking as the ledger) ----
+  const boardRows = LEDGER.filter(r=>!(r.flags&1)).slice().sort((a,b)=>b.score-a.score||a.date.localeCompare(b.date));
+  let boardShown=0;
+  function boardRowHTML(r){
+    const u=url(r);
+    const name = r.venue?(u?`<a href="${u}" target="_blank" rel="noopener">${r.venue}</a>`:r.venue):`<span class="muted">Venue record missing</span>`;
+    const badges = (r.flags&2?'<span class="badge gold">archival</span>':'')+(r.flags&4?'<span class="badge grey">unresolved</span>':'');
+    return `<tr><td class="tt">№${RANK_BY_SCORE.get(r.score).toLocaleString()}</td><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td></tr>`;
+  }
+  function boardAdd(n){
+    let html=''; for(let i=boardShown;i<Math.min(boardShown+n,boardRows.length);i++) html+=boardRowHTML(boardRows[i]);
+    document.querySelector('#board tbody').insertAdjacentHTML('beforeend',html); boardShown=Math.min(boardShown+n,boardRows.length);
+    const mb=document.getElementById('moreBoard');
+    mb.style.display = boardShown>=boardRows.length?'none':'block';
+    mb.textContent = `Show 50 more (${(boardRows.length-boardShown).toLocaleString()} remaining)`;
+  }
+  function lbTabRender(){
+    const top = lbTab==='top';
+    document.getElementById('lbTop').hidden = !top;
+    document.getElementById('lbBoard').hidden = top;
+    document.querySelector('.lb-toggle').style.display = top?'':'none';
+    document.getElementById('lbTitle').innerHTML = top ? 'The highest scores<br>he has ever given.' : 'Every score,<br>№1 to the lowest.';
+    if(!top && !boardShown) boardAdd(50);
   }
   function zFor(r){ const y=r.date.slice(0,4); const s=D.year_stats[y] || D.year_stats[years[0]]; return (r.score - s.mean)/s.sd; }
   function lbRender(){
