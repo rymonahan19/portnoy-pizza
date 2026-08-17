@@ -442,16 +442,17 @@
 
   <section>
     <h2>All reviews</h2>
-    <p class="tr-note" style="margin:0 0 10px"><b>All-time %</b> — where the score ranks among every calibration score since 2013.<br><b>All-time adjusted</b> — the score's percentile within its own year, re-expressed across all time.</p>
+    <p class="tr-note" style="margin:0 0 10px"><b>All-time rank</b> — where the review ranks by score against every review since 2013 (ties share a rank; protest scores excluded).<br><b>All-time %</b> — where the score ranks among every calibration score since 2013.<br><b>All-time adjusted</b> — the score's percentile within its own year, re-expressed across all time.</p>
     <div class="lsearch"><input id="ledgerSearch" type="search" placeholder="Find your local scores — city or state" aria-label="Search reviews by city or state"><button id="ledgerClear" hidden aria-label="Clear search">✕</button></div>
     <p class="tr-note" id="lsCount" style="margin:6px 0 8px"></p>
-    <div class="tablewrap"><table id="ledger"><thead><tr><th>Review</th><th>Score</th><th title="Where the score ranks among every calibration score since 2013">All-time %</th><th title="The score's percentile within its own year, re-expressed across every calibration score since 2013">All-time<br>adjusted</th></tr></thead><tbody></tbody></table></div>
+    <div class="tablewrap"><table id="ledger"><thead><tr><th>Review</th><th>Score</th><th title="Where this review ranks by score against every review since 2013 (protest scores excluded); ties share a rank">All-time<br>rank</th><th title="Where the score ranks among every calibration score since 2013">All-time %</th><th title="The score's percentile within its own year, re-expressed across every calibration score since 2013">All-time<br>adjusted</th></tr></thead><tbody></tbody></table></div>
     <button class="more" id="more">Show 50 more</button>
   </section>
 
   <section>
     <h2>Ledger key</h2>
     <div class="lkey">
+      <div class="krow"><span class="kname">All-time rank</span><span class="kdef">Where the review ranks by score against every review since 2013. Ties share a rank; protest scores excluded.</span></div>
       <div class="krow"><span class="kname">All-time %</span><span class="kdef">Where the score ranks among every calibration score since 2013.</span></div>
       <div class="krow"><span class="kname">All-time adjusted</span><span class="kdef">The score's percentile within its own year, re-expressed across all time.</span></div>
       <div class="krow"><span class="kname"><span class="badge">protest</span></span><span class="kdef">Below 1.0 — excluded from calibration.</span></div>
@@ -968,12 +969,17 @@
 
   // ---- ledger ----
   const led = LEDGER.slice().reverse(); let shown=0; const tb=document.querySelector('#ledger tbody');
+  // All-time rank: competition ranking (1 + count of strictly higher scores) over every non-protest review, matching the leaderboard.
+  const RANK_BY_SCORE = (()=>{ const m=new Map(); const scores=LEDGER.filter(r=>!(r.flags&1)).map(r=>r.score).sort((a,b)=>b-a);
+    scores.forEach((s,i)=>{ if(!m.has(s)) m.set(s,i+1); }); return m; })();
+  const RANK_TOTAL = LEDGER.filter(r=>!(r.flags&1)).length;
   function rowHTML(r){
     const excluded = (r.flags&1)||(r.flags&2); const p = excluded?null:pctInYear(r.date,r.score); const ap = excluded?null:pctRank(ALLCAL,r.score); const alltime = p==null?null:quantile(ALLCAL,p/100);
+    const rank = (r.flags&1)?null:RANK_BY_SCORE.get(r.score);
     const u = url(r);
     const name = r.venue?(u?`<a href="${u}" target="_blank" rel="noopener">${r.venue}</a>`:r.venue):`<span class="muted">Venue record missing</span>`;
     const badges = (r.flags&1?'<span class="badge">protest</span>':'')+(r.flags&2?'<span class="badge grey">archival</span>':'')+(r.flags&4?'<span class="badge grey">unresolved</span>':'');
-    return `<tr><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td><td>${ap==null?'—':ord(Math.round(ap))}</td><td class="tt">${alltime==null?'—':fmt1(alltime)}</td></tr>`;
+    return `<tr><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td><td class="tt" title="${rank==null?'':'№'+rank+' of '+RANK_TOTAL.toLocaleString()}">${rank==null?'—':'№'+rank.toLocaleString()}</td><td>${ap==null?'—':ord(Math.round(ap))}</td><td class="tt">${alltime==null?'—':fmt1(alltime)}</td></tr>`;
   }
   function addRows(n){
     let html='';
