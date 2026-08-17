@@ -74,6 +74,29 @@
   .pcell{border:1px solid var(--line);border-radius:4px;padding:8px 4px 6px;text-align:center}
   .pcell b{display:block;font-family:var(--display);font-weight:800;font-size:18px;line-height:1}
   .pcell span{display:block;font-family:var(--mono);font-size:12px;font-weight:600;margin-top:3px}
+  .grades .grow,.pcell{cursor:pointer}
+  .grades .grow:hover .gname,.pcell:hover b{color:var(--brick)}
+  .detail{margin-top:12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);max-height:340px;overflow-y:auto}
+  .detail .dhead{position:sticky;top:0;background:var(--panel);display:flex;justify-content:space-between;gap:10px;padding:9px 12px;font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ash);border-bottom:1px solid var(--line)}
+  .detail a.drow{display:flex;gap:12px;align-items:baseline;padding:8px 12px;border-bottom:1px solid var(--line);text-decoration:none}
+  .detail a.drow:last-child{border-bottom:0}
+  .drow b{font-family:var(--display);font-weight:700;font-size:16px;min-width:32px}
+  .drow .dv{flex:1;font-size:13px}
+  .drow .dv small{display:block;color:var(--ash);font-size:11px}
+  /* year-to-date board */
+  .dash{background:var(--ink);border-radius:6px;padding:16px 14px 12px;color:#fff}
+  .dash .dbar{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0 2px 12px}
+  .dash .dbar b{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.04em;text-transform:uppercase}
+  .dash .dbar span{font:600 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:#B9BDB6}
+  .dgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .dtile{background:rgba(255,255,255,.05);border:1px solid #35383B;border-radius:5px;padding:10px 10px 9px}
+  .dtile .dl{font:600 9.5px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:#B9BDB6;line-height:1.4}
+  .dtile .dvv{font-family:var(--display);font-weight:800;font-size:27px;line-height:1;margin-top:5px}
+  .dtile .dvv.odds{color:#35C759}
+  .dtile .dd{font:600 11px var(--mono);margin-top:4px}
+  .dd.up{color:#35C759}.dd.down{color:#FF5A4E}.dd.flat{color:#B9BDB6}
+  .dash .dnote{font:10.5px var(--mono);color:#8A8F94;margin:10px 2px 0;line-height:1.5}
+  @media (max-width:640px){.dgrid{grid-template-columns:repeat(2,1fr)}}
   @media (max-width:420px){
     .grow{grid-template-columns:104px 1fr 50px;gap:10px}
     .gname{font-size:13px}
@@ -263,6 +286,11 @@
   </section>
 
   <section>
+    <h2>Year to date</h2>
+    <div class="dash" id="dash"></div>
+  </section>
+
+  <section>
     <h2>Translate a score</h2>
     <div class="translator">
       <div class="tr-head">
@@ -401,6 +429,8 @@
       <div class="grow"><span class="gname">Bad</span><span class="gtrack"><i style="left:0;right:90%;opacity:.18"></i></span><span class="gpct">&lt;10</span></div>
       <div class="gscale" aria-hidden="true"><span>0</span><span>percentile of his last 12 months of scores</span><span>100</span></div>
     </div>
+    <div class="detail" id="gdetail" hidden></div>
+    <p class="tr-note" style="margin-top:8px">Tap any row to see the restaurants behind it.</p>
   </section>
 
   <section>
@@ -409,6 +439,7 @@
       <div class="gyears" id="pyears"><select id="pyFrom" aria-label="From year"></select><span>–</span><select id="pyTo" aria-label="To year"></select></div>
     </div>
     <div class="ptable" id="ptable"></div>
+    <div class="detail" id="pdetail" hidden></div>
     <p class="tr-note" id="ptNote"></p>
   </section>
   </div>
@@ -476,13 +507,17 @@
   const GBANDS=[['Rarefied air',97,100],['Elite',90,97],['Great',75,90],['Above average',55,75],['Average',40,55],['Below average',25,40],['Poor',10,25],['Bad',0,10]];
   const GOPAC=[1,.92,.78,.62,.48,.36,.26,.18];
   const GDRIVE=[['Destination — travel no matter where',9,10,'9.0+'],['Worth a dedicated drive',8,9,'8.0–8.9'],['Stop if you’re nearby',7.5,8,'7.5–7.9'],['Neighborhood slice',0,7.5,'<7.5']];
+  const CUT365 = new Date(new Date(D.as_of).getTime()-365*86400000).toISOString().slice(0,10);
+  let GMETA=[], gOpen=null;  // per-row {label, lo, hi, basis} for the tap-for-list panel
   function gradesRender(mode){
     const el=document.getElementById('gradesBody'); if(!el) return;
+    const gd=document.getElementById('gdetail'); if(gd){ gd.hidden=true; gd.innerHTML=''; } gOpen=null;
     const SRC = mode==='score' ? gPop() : W;   // Score derives thresholds from the selected period; % and Total grade against today's scale
     const lo=SRC[0], hi=SRC[SRC.length-1], span=(hi-lo)||1;
     let html='';
     if(mode==='drive'){
       const dOpac=[1,.85,.55,.3];
+      GMETA = GDRIVE.map(g=>({label:`${g[0]} (${g[3]})`, lo:g[1]===0?-Infinity:g[1], hi:g[2]===10?Infinity:g[2], basis:'all'}));
       GDRIVE.forEach((g,i)=>{
         html+=`<div class="grow"><span class="gname">${g[0]}</span><span class="gtrack"><i style="left:${g[1]*10}%;right:${100-g[2]*10}%;${i===0?'background:var(--brick)':'opacity:'+dOpac[i]}"></i></span><span class="gpct">${g[3]}</span></div>`;
       });
@@ -496,7 +531,11 @@
         return P.filter(s=>s>=sLo && s<sHi).length; });
       maxC = Math.max(...counts, 1);
     }
+    GMETA=[];
     GBANDS.forEach((g,i)=>{ let l,r,lab;
+      const Q = (mode==='total'||mode==='pct') ? W : SRC;   // bounds basis: today's ranges for counts, the period itself for Score
+      const mLo = g[1]===0?-Infinity:quantile(Q,g[1]/100), mHi = g[2]===100?Infinity:quantile(Q,g[2]/100);
+      GMETA.push({label:g[0], lo:mLo, hi:mHi, basis:'cal'});
       if(mode==='total'||mode==='pct'){
         l=0; r=100-(counts[i]/maxC*100);
         lab = mode==='total' ? counts[i].toLocaleString() : Math.round(counts[i]/(P.length||1)*100)+'%';
@@ -530,17 +569,68 @@
   const gtog=document.getElementById('gtoggle');
   if(gtog) gtog.addEventListener('click',e=>{ if(e.target.dataset.g){ gMode=e.target.dataset.g; gtog.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===e.target)); gyWrap.classList.toggle('off', gMode==='drive'); gradesRender(gMode); } });
   gradesRender('score');
+  // ---- year-to-date board (DraftKings-style) ----
+  (function(){ const el=document.getElementById('dash'); if(!el) return;
+    const md=D.as_of.slice(5,10), yNow=D.as_of.slice(0,4), yPrev=String(+yNow-1);
+    const cal=r=>!(r.flags&1)&&!(r.flags&2);
+    const ytd=y=>LEDGER.filter(r=>cal(r) && r.date.slice(0,4)===y && r.date.slice(5,10)<=md);
+    const cur=ytd(yNow), prev=ytd(yPrev);
+    const avg=a=>a.length?a.reduce((s,r)=>s+r.score,0)/a.length:0;
+    const hiOf=a=>a.length?Math.max(...a.map(r=>r.score)):0;
+    const c8=a=>a.filter(r=>r.score>=8).length;
+    const delta=(d,fmt,goodUp=true)=>{ const eps=typeof fmt==='function'?0.005:0.5; const cls=Math.abs(d)<eps?'flat':(d>0===goodUp?'up':'down'); const arrow=Math.abs(d)<eps?'—':(d>0?'▲':'▼'); const val=typeof fmt==='function'?fmt(Math.abs(d)):Math.abs(Math.round(d)); return `<div class="dd ${cls}">${arrow} ${val} vs '${yPrev.slice(2)} to date</div>`; };
+    const n=W.length;
+    const amOdds=t=>{ const k=W.filter(s=>s>=t-1e-9).length; const p=(k+1)/(n+2); return p>=0.5 ? '-'+(Math.round(100*p/(1-p)/5)*5) : '+'+(Math.round(100*(1-p)/p/5)*5); };
+    let since=0, lastNine=null;
+    for(let i=LEDGER.length-1;i>=0;i--){ if(LEDGER[i].score>=9){ lastNine=LEDGER[i]; break; } since++; }
+    const tile=(l,v,d='',odds=false)=>`<div class="dtile"><div class="dl">${l}</div><div class="dvv${odds?' odds':''}">${v}</div>${d}</div>`;
+    el.innerHTML =
+      `<div class="dbar"><b>${yNow} season</b><span>through ${md.replace('-','/')} · vs same point ${yPrev}</span></div>`+
+      `<div class="dgrid">`+
+      tile('Reviews', cur.length, delta(cur.length-prev.length, null))+
+      tile('Avg score', avg(cur).toFixed(2), delta(avg(cur)-avg(prev), x=>x.toFixed(2)))+
+      tile('Season high', fmt1(hiOf(cur)), delta(hiOf(cur)-hiOf(prev), x=>x.toFixed(1)))+
+      tile('8.0+ hits', `${c8(cur)}`, delta(c8(cur)-c8(prev), null))+
+      tile('Next review 9.0+', amOdds(9), '', true)+
+      tile('Next review 8.5+', amOdds(8.5), '', true)+
+      tile('Next review 8.0+', amOdds(8), '', true)+
+      tile('9.0 drought', since.toLocaleString(), `<div class="dd flat">reviews since ${lastNine?lastNine.date.slice(0,4):'—'}</div>`)+
+      `</div>`+
+      `<div class="dnote">Odds are empirical, smoothed from his last ${n} scores — for fun, not a sportsbook. YTD figures use calibration reviews only.</div>`;
+  })();
+  // ---- tap a grade row for the restaurants behind it ----
+  function detailHTML(title, rows){
+    const inner = rows.map(r=>{ const u=url(r); const loc=[r.city,r.state].filter(Boolean).join(', ');
+      return `<a class="drow" ${u?`href="${u}" target="_blank" rel="noopener"`:''}><b>${fmt1(r.score)}</b><span class="dv">${r.venue||'Venue record missing'}<small>${loc}${loc?' · ':''}${r.date}</small></span></a>`; }).join('');
+    return `<div class="dhead"><span>${title}</span><span>tap row again to close</span></div>` + inner;
+  }
+  function gPeriodRows(){
+    const base = LEDGER.filter(r=>!(r.flags&1)&&!(r.flags&2));
+    if(!gyFrom || gyFrom.value==='all') return base;
+    if(gyFrom.value==='12mo') return base.filter(r=>r.date>CUT365);
+    return base.filter(r=>{ const y=r.date.slice(0,4); return y>=gyFrom.value && y<=gyTo.value; });
+  }
+  document.getElementById('gradesBody').addEventListener('click',e=>{
+    const row=e.target.closest('.grow'); if(!row) return;
+    const idx=[...row.parentNode.querySelectorAll('.grow')].indexOf(row); const meta=GMETA[idx]; if(!meta) return;
+    const panel=document.getElementById('gdetail');
+    if(gOpen===idx){ panel.hidden=true; panel.innerHTML=''; gOpen=null; return; }
+    const pool = meta.basis==='all' ? LEDGER : gPeriodRows();
+    const rows = pool.filter(r=>r.score>=meta.lo && r.score<meta.hi).sort((a,b)=>b.score-a.score||b.date.localeCompare(a.date));
+    panel.innerHTML = detailHTML(`${meta.label} · ${rows.length} review${rows.length===1?'':'s'}`, rows);
+    panel.hidden=false; panel.scrollTop=0; gOpen=idx;
+  });
   // ---- every-score periodic table, with its own period selector ----
   // Draws from the FULL archive (protest + archival included), unlike the calibration-only stats above —
   // this is the census, so the lone 10 and the sub-1.0 protests belong in it.
   (function(){ const pt=document.getElementById('ptable'); if(!pt) return;
     const pyFrom=document.getElementById('pyFrom'), pyTo=document.getElementById('pyTo');
     const PYRS=[...new Set(LEDGER.map(r=>r.date.slice(0,4)))].sort();
-    const CUT12=new Date(new Date(D.as_of).getTime()-365*86400000).toISOString().slice(0,10);
     pyFrom.innerHTML = `<option value="all">All time</option><option value="12mo">Last 12 months</option>` + PYRS.map(y=>`<option>${y}</option>`).join('');
     pyTo.innerHTML = PYRS.slice().reverse().map(y=>`<option>${y}</option>`).join('');
     pyTo.value = PYRS[PYRS.length-1]; pyTo.disabled = true;
-    const pPop = () => (pyFrom.value==='12mo' ? LEDGER.filter(r=>r.date>CUT12) : pyFrom.value==='all' ? LEDGER : LEDGER.filter(r=>{ const y=r.date.slice(0,4); return y>=pyFrom.value && y<=pyTo.value; })).map(r=>r.score);
+    const pRows = () => pyFrom.value==='12mo' ? LEDGER.filter(r=>r.date>CUT365) : pyFrom.value==='all' ? LEDGER : LEDGER.filter(r=>{ const y=r.date.slice(0,4); return y>=pyFrom.value && y<=pyTo.value; });
+    const pPop = () => pRows().map(r=>r.score);
     const pLabel = () => pyFrom.value==='12mo' ? 'in his last 12 months' : pyFrom.value==='all' ? 'since 2013' : pyFrom.value===pyTo.value ? `in ${pyFrom.value}` : `${pyFrom.value}–${pyTo.value}`;
     function ptRender(){
       const P=pPop(); const m=new Map(); for(const s of P){ const k=fmt1(s); m.set(k,(m.get(k)||0)+1); }
@@ -551,6 +641,18 @@
     }
     const pySync = () => { if(pyFrom.value==='all'||pyFrom.value==='12mo'){ pyTo.disabled=true; } else { pyTo.disabled=false; if(pyTo.value<pyFrom.value) pyTo.value=pyFrom.value; } ptRender(); };
     pyFrom.addEventListener('change',pySync); pyTo.addEventListener('change',pySync);
+    // tap a tile for the restaurants at that exact score
+    const pd=document.getElementById('pdetail'); let pOpen=null;
+    function ptClose(){ pd.hidden=true; pd.innerHTML=''; pOpen=null; }
+    pt.addEventListener('click',e=>{
+      const cell=e.target.closest('.pcell'); if(!cell) return;
+      const k=cell.querySelector('b').innerText;
+      if(pOpen===k){ ptClose(); return; }
+      const rows=pRows().filter(r=>fmt1(r.score)===k).sort((a,b)=>b.date.localeCompare(a.date));
+      pd.innerHTML=detailHTML(`${k} · ${rows.length} review${rows.length===1?'':'s'}`, rows);
+      pd.hidden=false; pd.scrollTop=0; pOpen=k;
+    });
+    const _pt=ptRender; ptRender=function(){ ptClose(); _pt(); };
     ptRender();
   })();
 
@@ -741,7 +843,8 @@
     const stateName = STATES[ql] || Object.values(STATES).find(s=>s.toLowerCase()===ql);
     let hits;
     if(stateName){ hits=GEO.filter(r=>(r.state||'').toLowerCase()===stateName.toLowerCase()); }
-    else { hits=GEO.filter(r=>(r.city||'').toLowerCase()===ql); if(!hits.length) hits=GEO.filter(r=>(r.city||'').toLowerCase().includes(ql) || (r.venue||'').toLowerCase().includes(ql)); }
+    else { const norm=s=>s.toLowerCase().replace(/[\u2018\u2019'`\u00b4]/g,'').normalize('NFD').replace(/[\u0300-\u036f]/g,''); const nq=norm(q);
+      hits=GEO.filter(r=>norm(r.city||'')===nq); if(!hits.length) hits=GEO.filter(r=>norm(r.city||'').includes(nq) || norm(r.venue||'').includes(nq)); }
     if(!hits.length){ st.textContent=`No reviews match "${q}" — try a score (9.0), a city, a state, or a venue name`; return; }
     st.textContent=''; scoreFilter=null; center=[median(hits.map(r=>r.lat)), median(hits.map(r=>r.lng))]; centerLabel=stateName?('in '+stateName):('near '+q); stateFilter=stateName||null;
     document.getElementById('radius').style.visibility = stateFilter?'hidden':'visible';
