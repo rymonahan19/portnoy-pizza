@@ -73,7 +73,7 @@
   .ptable{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px;margin-top:4px}
   .pcell{border:1px solid var(--line);border-radius:4px;padding:8px 4px 6px;text-align:center}
   .pcell b{display:block;font-family:var(--display);font-weight:800;font-size:18px;line-height:1}
-  .pcell span{display:block;font-family:var(--mono);font-size:10px;margin-top:3px}
+  .pcell span{display:block;font-family:var(--mono);font-size:12px;font-weight:600;margin-top:3px}
   @media (max-width:420px){
     .grow{grid-template-columns:104px 1fr 50px;gap:10px}
     .gname{font-size:13px}
@@ -405,8 +405,11 @@
 
   <section>
     <h2>Every score</h2>
+    <div class="gbar">
+      <div class="gyears" id="pyears"><select id="pyFrom" aria-label="From year"></select><span>–</span><select id="pyTo" aria-label="To year"></select></div>
+    </div>
     <div class="ptable" id="ptable"></div>
-    <p class="tr-note">Every score he has ever landed on — the small number is how many times he has given it. Full calibration set since 2013; darker tiles are more common.</p>
+    <p class="tr-note" id="ptNote"></p>
   </section>
   </div>
 
@@ -527,12 +530,28 @@
   const gtog=document.getElementById('gtoggle');
   if(gtog) gtog.addEventListener('click',e=>{ if(e.target.dataset.g){ gMode=e.target.dataset.g; gtog.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===e.target)); gyWrap.classList.toggle('off', gMode==='drive'); gradesRender(gMode); } });
   gradesRender('score');
-  // ---- every-score periodic table ----
+  // ---- every-score periodic table, with its own period selector ----
+  // Draws from the FULL archive (protest + archival included), unlike the calibration-only stats above —
+  // this is the census, so the lone 10 and the sub-1.0 protests belong in it.
   (function(){ const pt=document.getElementById('ptable'); if(!pt) return;
-    const m=new Map(); for(const s of ALLCAL){ const k=fmt1(s); m.set(k,(m.get(k)||0)+1); }
-    const keys=[...m.keys()].sort((a,b)=>+a-+b); const mx=Math.max(...m.values());
-    pt.innerHTML = keys.map(k=>{ const c=m.get(k); const t=Math.sqrt(c/mx); const dark=t>0.55;
-      return `<div class="pcell" style="background:rgba(23,24,26,${(0.04+0.9*t).toFixed(3)})"><b style="color:${dark?'#fff':'var(--ink)'}">${k}</b><span style="color:${dark?'rgba(255,255,255,.75)':'var(--ash)'}">${c.toLocaleString()}</span></div>`; }).join('');
+    const pyFrom=document.getElementById('pyFrom'), pyTo=document.getElementById('pyTo');
+    const PYRS=[...new Set(LEDGER.map(r=>r.date.slice(0,4)))].sort();
+    const CUT12=new Date(new Date(D.as_of).getTime()-365*86400000).toISOString().slice(0,10);
+    pyFrom.innerHTML = `<option value="all">All time</option><option value="12mo">Last 12 months</option>` + PYRS.map(y=>`<option>${y}</option>`).join('');
+    pyTo.innerHTML = PYRS.slice().reverse().map(y=>`<option>${y}</option>`).join('');
+    pyTo.value = PYRS[PYRS.length-1]; pyTo.disabled = true;
+    const pPop = () => (pyFrom.value==='12mo' ? LEDGER.filter(r=>r.date>CUT12) : pyFrom.value==='all' ? LEDGER : LEDGER.filter(r=>{ const y=r.date.slice(0,4); return y>=pyFrom.value && y<=pyTo.value; })).map(r=>r.score);
+    const pLabel = () => pyFrom.value==='12mo' ? 'in his last 12 months' : pyFrom.value==='all' ? 'since 2013' : pyFrom.value===pyTo.value ? `in ${pyFrom.value}` : `${pyFrom.value}–${pyTo.value}`;
+    function ptRender(){
+      const P=pPop(); const m=new Map(); for(const s of P){ const k=fmt1(s); m.set(k,(m.get(k)||0)+1); }
+      const keys=[...m.keys()].sort((a,b)=>+a-+b); const mx=Math.max(...m.values(),1);
+      pt.innerHTML = keys.map(k=>{ const c=m.get(k); const t=Math.sqrt(c/mx); const dark=t>0.55;
+        return `<div class="pcell" style="background:rgba(23,24,26,${(0.04+0.9*t).toFixed(3)})"><b style="color:${dark?'#fff':'var(--ink)'}">${k}</b><span style="color:${dark?'rgba(255,255,255,.88)':'rgba(23,24,26,.72)'}">${c.toLocaleString()}</span></div>`; }).join('');
+      document.getElementById('ptNote').innerHTML = `Every score he has landed on ${pLabel()} — <b>${P.length.toLocaleString()}</b> reviews, protest and archival included. The small number is how many times he has given it; darker tiles are more common.`;
+    }
+    const pySync = () => { if(pyFrom.value==='all'||pyFrom.value==='12mo'){ pyTo.disabled=true; } else { pyTo.disabled=false; if(pyTo.value<pyFrom.value) pyTo.value=pyFrom.value; } ptRender(); };
+    pyFrom.addEventListener('change',pySync); pyTo.addEventListener('change',pySync);
+    ptRender();
   })();
 
   // ---- verdict ----
