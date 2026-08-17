@@ -74,7 +74,11 @@
   .grades .grow,.pcell{cursor:pointer}
   .grades .grow:hover .gname,.pcell:hover b{color:var(--brick)}
   .detail{margin-top:12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);max-height:340px;overflow-y:auto}
-  .detail .dhead{position:sticky;top:0;background:var(--panel);display:flex;justify-content:space-between;gap:10px;padding:9px 12px;font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ash);border-bottom:1px solid var(--line)}
+  .detail .dhead{position:sticky;top:0;background:var(--panel);display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ash);border-bottom:1px solid var(--line)}
+  .dclose{font:600 10px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ash);background:#fff;border:1px solid var(--line);border-radius:3px;padding:4px 9px;cursor:pointer;white-space:nowrap}
+  @media (max-width:640px){
+    .detail{position:fixed;left:8px;right:8px;bottom:8px;z-index:900;max-height:62vh;box-shadow:0 -10px 34px rgba(0,0,0,.3);border-radius:10px}
+  }
   .detail a.drow{display:flex;gap:12px;align-items:baseline;padding:8px 12px;border-bottom:1px solid var(--line);text-decoration:none}
   .detail a.drow:last-child{border-bottom:0}
   .drow b{font-family:var(--display);font-weight:700;font-size:16px;min-width:32px}
@@ -407,6 +411,7 @@
   <!-- ============ VIEW: ALL REVIEWS ============ -->
   <div class="view active" id="view-reviews">
   <section>
+    <h2>Betting board</h2>
     <button class="dashbar" id="dashToggle" aria-expanded="false" aria-controls="dash">
       <span class="dbteaser" id="dashTeaser"></span>
       <span class="dbchev" aria-hidden="true">▾</span>
@@ -415,6 +420,7 @@
   </section>
 
   <section>
+    <h2>Latest review</h2>
     <div class="verdict" id="verdict2"></div>
   </section>
 
@@ -749,7 +755,12 @@
   function detailHTML(title, rows){
     const inner = rows.map(r=>{ const u=url(r); const loc=[r.city,r.state].filter(Boolean).join(', ');
       return `<a class="drow" ${u?`href="${u}" target="_blank" rel="noopener"`:''}><b>${fmt1(r.score)}</b><span class="dv">${r.venue||'Venue record missing'}<small>${loc}${loc?' · ':''}${r.date}</small></span></a>`; }).join('');
-    return `<div class="dhead"><span>${title}</span><span>tap row again to close</span></div>` + inner;
+    return `<div class="dhead"><span>${title}</span><button class="dclose">✕ close</button></div>` + inner;
+  }
+  function ensureVisible(panel){
+    if(getComputedStyle(panel).position==='fixed') return;   // mobile bottom sheet is already on screen
+    const r=panel.getBoundingClientRect();
+    if(r.top<48 || r.top>window.innerHeight-160) window.scrollTo({top:window.scrollY+r.top-64, behavior:'smooth'});
   }
   function gPeriodRows(){
     const base = LEDGER.filter(r=>!(r.flags&1)&&!(r.flags&2));
@@ -765,8 +776,9 @@
     const pool = meta.basis==='all' ? LEDGER : gPeriodRows();
     const rows = pool.filter(r=>r.score>=meta.lo && r.score<meta.hi).sort((a,b)=>b.score-a.score||b.date.localeCompare(a.date));
     panel.innerHTML = detailHTML(`${meta.label} · ${rows.length} review${rows.length===1?'':'s'}`, rows);
-    panel.hidden=false; panel.scrollTop=0; gOpen=idx;
+    panel.hidden=false; panel.scrollTop=0; gOpen=idx; ensureVisible(panel);
   });
+  document.getElementById('gdetail').addEventListener('click',e=>{ if(e.target.closest('.dclose')){ const p=document.getElementById('gdetail'); p.hidden=true; p.innerHTML=''; gOpen=null; } });
   // ---- every-score periodic table, with its own period selector ----
   // Draws from the FULL archive (protest + archival included), unlike the calibration-only stats above —
   // this is the census, so the lone 10 and the sub-1.0 protests belong in it.
@@ -797,8 +809,9 @@
       if(pOpen===k){ ptClose(); return; }
       const rows=pRows().filter(r=>fmt1(r.score)===k).sort((a,b)=>b.date.localeCompare(a.date));
       pd.innerHTML=detailHTML(`${k} · ${rows.length} review${rows.length===1?'':'s'}`, rows);
-      pd.hidden=false; pd.scrollTop=0; pOpen=k;
+      pd.hidden=false; pd.scrollTop=0; pOpen=k; ensureVisible(pd);
     });
+    pd.addEventListener('click',e=>{ if(e.target.closest('.dclose')) ptClose(); });
     const _pt=ptRender; ptRender=function(){ ptClose(); _pt(); };
     ptRender();
   })();
