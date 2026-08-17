@@ -227,6 +227,8 @@
   .lsearch input{flex:1;font:15px var(--body);padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);min-width:0}
   .lsearch input:focus{outline:none;border-color:var(--ink)}
   .lsearch button{font:700 14px var(--mono);border:1px solid var(--line);background:#fff;border-radius:4px;padding:0 14px;cursor:pointer;color:var(--ash)}
+  .noresults{background:var(--panel);border:1px dashed var(--line);border-radius:6px;padding:20px 14px;font-size:14px;color:var(--ash);text-align:center;line-height:1.6}
+  .noresults b{color:var(--ink)}
   .more{display:block;width:100%;margin-top:10px;font:600 13px var(--body);padding:10px;border:1px solid var(--ink);background:#fff;border-radius:4px;cursor:pointer}
   .method p{margin:8px 0;font-size:14px}
   .method b{font-weight:600}
@@ -399,7 +401,7 @@
     <div class="chips" id="locChips"></div>
     <div class="radius" id="radius"><span>Radius</span><button data-r="5">5 mi</button><button data-r="15" class="on">15 mi</button><button data-r="50">50 mi</button><button data-r="150">150 mi</button><span id="locStatus" style="margin-left:auto"></span></div>
     <div id="map"><div class="mapnote" id="mapnote"></div></div>
-    <div class="nearhead"><div id="nearCount" style="font-family:var(--display);font-weight:700;font-size:18px"></div><div class="sort"><button data-s="dist" class="on">Nearest</button> <button data-s="score">Highest</button> <button data-s="date">Newest</button></div></div>
+    <div class="nearhead"><div id="nearCount" style="font-family:var(--display);font-weight:700;font-size:18px"></div><div class="sort"><button data-s="dist">Nearest</button> <button data-s="score" class="on">Highest</button> <button data-s="date">Newest</button></div></div>
     <div class="cards" id="cards"></div>
     <button class="more" id="moreNear" style="display:none">Show more</button>
     <p class="tr-note">Pins show his score. <span style="color:var(--brick);font-weight:600">Red</span> 8.5 and up · <b>black</b> 8.0–8.4 · white 7.5–7.9 · grey below 7.5. Distances are straight-line. Tap a pin for the review.</p>
@@ -1006,7 +1008,8 @@
   const toRad = d=>d*Math.PI/180;
   function miles(a,b,c,d){ const R=3958.8; const dLat=toRad(c-a), dLng=toRad(d-b); const s=Math.sin(dLat/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(s)); }
   const median = arr => { const s=arr.slice().sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; };
-  let map=null, layer=null, meMarker=null, nearInited=false, center=null, centerLabel='', radiusMi=15, sortMode='dist', nearRows=[], nearShown=0, tilesOk=false, stateFilter=null, scoreFilter=null;
+  let map=null, layer=null, meMarker=null, nearInited=false, center=null, centerLabel='', radiusMi=15, sortMode='score', nearRows=[], nearShown=0, tilesOk=false, stateFilter=null, scoreFilter=null;
+  function setSort(m){ sortMode=m; document.querySelectorAll('.nearhead .sort button').forEach(b=>b.classList.toggle('on',b.dataset.s===m)); }
   const pinClass = s => s>=8.5?'hot':s>=8.0?'high':s>=7.5?'mid':'low';
   function nearInit(){
     if(nearInited){ if(map) map.invalidateSize(); return; }
@@ -1036,8 +1039,15 @@
   function useMyLocation(){
     const st=document.getElementById('locStatus'); st.textContent='locating…';
     if(!navigator.geolocation){ st.textContent='location unavailable here — type a city'; return; }
-    navigator.geolocation.getCurrentPosition(pos=>{ center=[pos.coords.latitude,pos.coords.longitude]; centerLabel='near you'; stateFilter=null; scoreFilter=null; document.getElementById('radius').style.visibility='visible'; st.textContent=''; refreshNear(true); },
+    navigator.geolocation.getCurrentPosition(pos=>{ center=[pos.coords.latitude,pos.coords.longitude]; centerLabel='near you'; stateFilter=null; scoreFilter=null; setSort('dist'); document.getElementById('radius').style.visibility='visible'; st.textContent=''; refreshNear(true); },
       err=>{ st.textContent='location blocked here — type a city'; }, {timeout:8000, maximumAge:600000});
+  }
+  function noResults(q, hint){
+    document.getElementById('locStatus').textContent='';
+    document.getElementById('nearCount').innerHTML=`No results for “${q}”`;
+    nearRows=[]; document.getElementById('cards').innerHTML=`<div class="noresults"><b>Nothing found for “${q}”.</b><br>${hint||'Try a score (9.0 or 8.5+), a city, a state, or a venue name.'}</div>`;
+    document.getElementById('moreNear').style.display='none';
+    if(layer) layer.clearLayers();
   }
   function searchPlace(q){
     q=(q||'').trim(); if(!q) return; const ql=q.toLowerCase(); const st=document.getElementById('locStatus');
@@ -1046,8 +1056,8 @@
     if(sm && +sm[1]<=10){
       const v = Math.round(+sm[1]*10)/10, min = !!sm[2];
       const hits = GEO.filter(r=> min ? r.score>=v-1e-9 : Math.abs(r.score-v)<1e-9);
-      if(!hits.length){ st.textContent = min ? `Nothing at ${fmt1(v)} or above` : `He has never given a ${fmt1(v)} — try “${fmt1(v)}+”`; return; }
-      st.textContent=''; scoreFilter={v, min}; stateFilter=null;
+      if(!hits.length){ noResults(q, min ? `Nothing at ${fmt1(v)} or above.` : `He has never given a ${fmt1(v)} — try “${fmt1(v)}+”.`); return; }
+      st.textContent=''; scoreFilter={v, min}; stateFilter=null; setSort('score');
       center=[median(hits.map(r=>r.lat)), median(hits.map(r=>r.lng))]; centerLabel=`at ${fmt1(v)}${min?'+':''}`;
       document.getElementById('radius').style.visibility='hidden';
       refreshNear(true); return;
@@ -1057,8 +1067,8 @@
     if(stateName){ hits=GEO.filter(r=>(r.state||'').toLowerCase()===stateName.toLowerCase()); }
     else { const norm=s=>s.toLowerCase().replace(/[\u2018\u2019'`\u00b4]/g,'').normalize('NFD').replace(/[\u0300-\u036f]/g,''); const nq=norm(q);
       hits=GEO.filter(r=>norm(r.city||'')===nq); if(!hits.length) hits=GEO.filter(r=>norm(r.city||'').includes(nq) || norm(r.venue||'').includes(nq)); }
-    if(!hits.length){ st.textContent=`No reviews match "${q}" — try a score (9.0), a city, a state, or a venue name`; return; }
-    st.textContent=''; scoreFilter=null; center=[median(hits.map(r=>r.lat)), median(hits.map(r=>r.lng))]; centerLabel=stateName?('in '+stateName):('near '+q); stateFilter=stateName||null;
+    if(!hits.length){ noResults(q); return; }
+    st.textContent=''; scoreFilter=null; setSort('score'); center=[median(hits.map(r=>r.lat)), median(hits.map(r=>r.lng))]; centerLabel=stateName?('in '+stateName):('near '+q); stateFilter=stateName||null;
     document.getElementById('radius').style.visibility = stateFilter?'hidden':'visible';
     refreshNear(true);
   }
