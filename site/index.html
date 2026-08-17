@@ -31,7 +31,8 @@
   a{color:inherit}
   .wrap{max-width:720px;margin:0 auto;padding:0 16px 10px}
   header.top{padding:14px 0 10px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:2px solid var(--ink)}
-  .brand{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.01em;line-height:1}
+  .brand{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.01em;line-height:1;display:inline-block;color:inherit;text-decoration:none}
+  a.brand:hover{text-decoration:none;opacity:.75}
   .brand-sub{font-family:var(--body);font-weight:500;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--ash);white-space:nowrap}
   @media (max-width:640px){
     .brand-sub{font-size:10px;letter-spacing:.04em}
@@ -309,7 +310,7 @@
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand">portnoy<span style="color:var(--brick)">.</span>pizza</div>
+    <a class="brand" href="https://portnoy.pizza/">portnoy<span style="color:var(--brick)">.</span>pizza</a>
     <div class="brand-sub">The Portnoy Score Index</div>
   </header>
   <nav class="tabs" id="tabs">
