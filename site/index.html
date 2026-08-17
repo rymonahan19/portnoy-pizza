@@ -36,8 +36,8 @@
   .tagline{align-self:flex-end;text-align:right;font-size:14px;font-style:italic;color:var(--ash);line-height:1.35;max-width:30ch;padding-bottom:1px;text-wrap:balance}
   .tagline b{color:var(--brick);font-weight:600}
   @media (max-width:640px){
-    header.top{flex-direction:column;gap:10px;padding:24px 0 16px}
-    .tagline{align-self:flex-start;text-align:left}
+    header.top{padding:24px 0 16px}
+    .tagline{display:none}
   }
   .stamp{margin-top:4px}
   .srow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--line)}
@@ -60,6 +60,20 @@
   .gtrack i{position:absolute;top:0;bottom:0;min-width:6px;border-radius:3px;background:var(--ink)}
   .gpct{font-family:var(--mono);font-size:11px;color:var(--ash);text-align:right;white-space:nowrap}
   .gscale{display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ash)}
+  .gbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap}
+  .gyears{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--ash)}
+  .gyears select{font:600 11px var(--mono);border:1px solid var(--line);background:#fff;border-radius:3px;padding:4px 6px;color:var(--ink)}
+  .gyears.off{opacity:.35;pointer-events:none}
+  .gtoggle{display:flex;justify-content:flex-end}
+  .gtoggle button{font:600 11px var(--mono);border:1px solid var(--line);background:#fff;padding:4px 10px;cursor:pointer;color:var(--ink)}
+  .gtoggle button:first-child{border-radius:3px 0 0 3px}
+  .gtoggle button:last-child{border-radius:0 3px 3px 0}
+  .gtoggle button+button{border-left:0}
+  .gtoggle button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .ptable{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px;margin-top:4px}
+  .pcell{border:1px solid var(--line);border-radius:4px;padding:8px 4px 6px;text-align:center}
+  .pcell b{display:block;font-family:var(--display);font-weight:800;font-size:18px;line-height:1}
+  .pcell span{display:block;font-family:var(--mono);font-size:10px;margin-top:3px}
   @media (max-width:420px){
     .grow{grid-template-columns:104px 1fr 50px;gap:10px}
     .gname{font-size:13px}
@@ -73,11 +87,11 @@
   }
   /* tabs */
   nav.tabs{position:sticky;top:0;z-index:20;background:var(--paper);display:flex;gap:0;border-bottom:1px solid var(--line);margin:0 -16px;padding:0 16px}
-  nav.tabs a{flex:1;text-align:center;text-decoration:none;font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.06em;text-transform:uppercase;padding:12px 4px 10px;color:var(--ash);border-bottom:3px solid transparent;margin-bottom:-1px}
+  nav.tabs a{flex:1;text-align:center;text-decoration:none;font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.06em;text-transform:uppercase;padding:12px 4px 10px;color:var(--ash);border-bottom:3px solid transparent;margin-bottom:-1px}
   nav.tabs a.active{color:var(--ink);border-bottom-color:var(--brick)}
   @media (max-width:640px){
     nav.tabs{justify-content:space-between}
-    nav.tabs a{flex:0 1 auto;font-size:11px;letter-spacing:.03em;padding:12px 0 10px}
+    nav.tabs a{flex:0 1 auto;font-size:12px;letter-spacing:.03em;padding:12px 0 10px}
   }
   .view{display:none}.view.active{display:block}
   section{margin-top:28px}
@@ -234,10 +248,10 @@
     <div class="tagline">What a Dave Portnoy pizza score is <b>really</b> worth.</div>
   </header>
   <nav class="tabs" id="tabs">
-    <a href="#reviews" data-view="reviews" class="active">All reviews</a>
+    <a href="#reviews" data-view="reviews" class="active">Reviews</a>
     <a href="#leaderboard" data-view="leaderboard">Leaderboard</a>
     <a href="#index" data-view="index">The index</a>
-    <a href="#nearby" data-view="nearby">Near me</a>
+    <a href="#nearby" data-view="nearby">Search</a>
     <a href="#grades" data-view="grades">Grade scale</a>
   </nav>
 
@@ -311,10 +325,10 @@
   <!-- ============ VIEW: NEAR ME ============ -->
   <div class="view" id="view-nearby">
   <section>
-    <h2>Scores near you</h2>
-    <p class="lede" style="margin-top:0;font-size:15px">Every place he has scored, on a map. Use your location or type a city or state.</p>
+    <h2>Search</h2>
+    <p class="lede" style="margin-top:0;font-size:15px">Search every review by score, place, or venue name — or use your location.</p>
     <div class="locbar">
-      <input id="locInput" placeholder="City or state — e.g. Brooklyn, Boston, NJ" aria-label="City or state">
+      <input id="locInput" placeholder="Try 9.0, 8.5+, Boston, NJ, or Sally's Apizza" aria-label="Search by score, place, or venue name">
       <button id="locGo">Search</button>
       <button id="locMe" class="alt" title="Use my location">◎ Me</button>
     </div>
@@ -372,7 +386,11 @@
   <div class="view" id="view-grades">
   <section>
     <h2>Grades</h2>
-    <div class="grades">
+    <div class="gbar">
+      <div class="gyears" id="gyears"><select id="gyFrom" aria-label="From year"></select><span>–</span><select id="gyTo" aria-label="To year"></select></div>
+      <div class="gtoggle" id="gtoggle" role="tablist"><button data-g="score" class="on">Score</button><button data-g="pct">%</button><button data-g="total">Total</button><button data-g="drive">Drive</button></div>
+    </div>
+    <div class="grades" id="gradesBody">
       <div class="grow"><span class="gname">Rarefied air</span><span class="gtrack"><i style="left:97%;right:0;background:var(--brick)"></i></span><span class="gpct">97+</span></div>
       <div class="grow"><span class="gname">Elite</span><span class="gtrack"><i style="left:90%;right:3%;opacity:.92"></i></span><span class="gpct">90–97</span></div>
       <div class="grow"><span class="gname">Great</span><span class="gtrack"><i style="left:75%;right:10%;opacity:.78"></i></span><span class="gpct">75–90</span></div>
@@ -383,6 +401,12 @@
       <div class="grow"><span class="gname">Bad</span><span class="gtrack"><i style="left:0;right:90%;opacity:.18"></i></span><span class="gpct">&lt;10</span></div>
       <div class="gscale" aria-hidden="true"><span>0</span><span>percentile of his last 12 months of scores</span><span>100</span></div>
     </div>
+  </section>
+
+  <section>
+    <h2>Every score</h2>
+    <div class="ptable" id="ptable"></div>
+    <p class="tr-note">Every score he has ever landed on — the small number is how many times he has given it. Full calibration set since 2013; darker tiles are more common.</p>
   </section>
   </div>
 
@@ -443,6 +467,73 @@
     `<div class="srow"><span class="sname">Reviews on record</span><span class="sval"><b>${D.counts.archive.toLocaleString()}</b></span></div>`;
   document.getElementById('footDate').textContent = D.as_of;
   document.getElementById('mCounts').textContent = `${D.counts.archive.toLocaleString()} reviews from ${D.counts.first_date} to ${D.counts.last_date}, ${D.counts.calibration.toLocaleString()} in the calibration set`;
+
+  // ---- grade scale: percentile bands vs the score ranges they map to ----
+  const ALLCAL = [].concat(...Object.values(D.by_year)).sort((a,b)=>a-b);  // every calibration score, all time
+  const GBANDS=[['Rarefied air',97,100],['Elite',90,97],['Great',75,90],['Above average',55,75],['Average',40,55],['Below average',25,40],['Poor',10,25],['Bad',0,10]];
+  const GOPAC=[1,.92,.78,.62,.48,.36,.26,.18];
+  const GDRIVE=[['Destination — travel no matter where',9,10,'9.0+'],['Worth a dedicated drive',8,9,'8.0–8.9'],['Stop if you’re nearby',7.5,8,'7.5–7.9'],['Neighborhood slice',0,7.5,'<7.5']];
+  function gradesRender(mode){
+    const el=document.getElementById('gradesBody'); if(!el) return;
+    const SRC = mode==='score' ? gPop() : W;   // Score derives thresholds from the selected period; % and Total grade against today's scale
+    const lo=SRC[0], hi=SRC[SRC.length-1], span=(hi-lo)||1;
+    let html='';
+    if(mode==='drive'){
+      const dOpac=[1,.85,.55,.3];
+      GDRIVE.forEach((g,i)=>{
+        html+=`<div class="grow"><span class="gname">${g[0]}</span><span class="gtrack"><i style="left:${g[1]*10}%;right:${100-g[2]*10}%;${i===0?'background:var(--brick)':'opacity:'+dOpac[i]}"></i></span><span class="gpct">${g[3]}</span></div>`;
+      });
+      html+=`<div class="gscale" aria-hidden="true"><span>0</span><span>his drive-worthiness bands · paraphrased from his reviews</span><span>10</span></div>`;
+      el.innerHTML=html; return;
+    }
+    let counts=null, maxC=0, P=null, perLabel='';
+    if(mode==='total'||mode==='pct'){
+      P = gPop(); perLabel = gPeriodLabel();
+      counts = GBANDS.map(g=>{ const sLo = g[1]===0?-Infinity:quantile(W,g[1]/100), sHi = g[2]===100?Infinity:quantile(W,g[2]/100);
+        return P.filter(s=>s>=sLo && s<sHi).length; });
+      maxC = Math.max(...counts, 1);
+    }
+    GBANDS.forEach((g,i)=>{ let l,r,lab;
+      if(mode==='total'||mode==='pct'){
+        l=0; r=100-(counts[i]/maxC*100);
+        lab = mode==='total' ? counts[i].toLocaleString() : Math.round(counts[i]/(P.length||1)*100)+'%';
+      } else {
+        const sLo = g[1]===0?lo:quantile(SRC,g[1]/100), sHi = g[2]===100?hi:quantile(SRC,g[2]/100);
+        l=(sLo-lo)/span*100; r=100-((sHi-lo)/span*100);
+        lab = g[2]===100?`${fmt1(sLo)}+` : g[1]===0?`<${fmt1(sHi)}` : `${fmt1(sLo)}–${fmt1(sHi)}`;
+      }
+      html+=`<div class="grow"><span class="gname">${g[0]}</span><span class="gtrack"><i style="left:${l}%;right:${r}%;${i===0?'background:var(--brick)':'opacity:'+GOPAC[i]}"></i></span><span class="gpct">${lab}</span></div>`;
+    });
+    html+= mode==='total'
+      ? `<div class="gscale" aria-hidden="true"><span>0</span><span>his ${P.length.toLocaleString()} scores ${perLabel}, graded on today's ranges</span><span>${maxC.toLocaleString()}</span></div>`
+      : mode==='pct'
+      ? `<div class="gscale" aria-hidden="true"><span>0</span><span>share of his ${P.length.toLocaleString()} scores ${perLabel}, on today's ranges</span><span>${Math.round(maxC/(P.length||1)*100)}%</span></div>`
+      : `<div class="gscale" aria-hidden="true"><span>${fmt1(lo)}</span><span>score thresholds ${gPeriodLabel()} (${SRC.length.toLocaleString()} reviews)</span><span>${fmt1(hi)}</span></div>`;
+    el.innerHTML=html;
+  }
+  // year range selector (applies to % and Total)
+  const GYRS = Object.keys(D.by_year).sort();
+  const gyFrom=document.getElementById('gyFrom'), gyTo=document.getElementById('gyTo'), gyWrap=document.getElementById('gyears');
+  let gMode='score';
+  if(gyFrom){
+    gyFrom.innerHTML = `<option value="all">All time</option><option value="12mo">Last 12 months</option>` + GYRS.map(y=>`<option>${y}</option>`).join('');
+    gyTo.innerHTML = GYRS.slice().reverse().map(y=>`<option>${y}</option>`).join('');
+    gyTo.value = GYRS[GYRS.length-1]; gyTo.disabled = true;
+    const gySync = () => { if(gyFrom.value==='all'||gyFrom.value==='12mo'){ gyTo.disabled=true; } else { gyTo.disabled=false; if(gyTo.value<gyFrom.value) gyTo.value=gyFrom.value; } gradesRender(gMode); };
+    gyFrom.addEventListener('change',gySync); gyTo.addEventListener('change',gySync);
+  }
+  function gPop(){ if(!gyFrom || gyFrom.value==='12mo') return W; if(gyFrom.value==='all') return ALLCAL; const f=gyFrom.value, t=gyTo.value; return [].concat(...GYRS.filter(y=>y>=f&&y<=t).map(y=>D.by_year[y])).sort((a,b)=>a-b); }
+  function gPeriodLabel(){ if(!gyFrom || gyFrom.value==='12mo') return 'from his last 12 months'; if(gyFrom.value==='all') return 'since 2013'; const f=gyFrom.value, t=gyTo.value; return f===t?`in ${f}`:`${f}–${t}`; }
+  const gtog=document.getElementById('gtoggle');
+  if(gtog) gtog.addEventListener('click',e=>{ if(e.target.dataset.g){ gMode=e.target.dataset.g; gtog.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===e.target)); gyWrap.classList.toggle('off', gMode==='drive'); gradesRender(gMode); } });
+  gradesRender('score');
+  // ---- every-score periodic table ----
+  (function(){ const pt=document.getElementById('ptable'); if(!pt) return;
+    const m=new Map(); for(const s of ALLCAL){ const k=fmt1(s); m.set(k,(m.get(k)||0)+1); }
+    const keys=[...m.keys()].sort((a,b)=>+a-+b); const mx=Math.max(...m.values());
+    pt.innerHTML = keys.map(k=>{ const c=m.get(k); const t=Math.sqrt(c/mx); const dark=t>0.55;
+      return `<div class="pcell" style="background:rgba(23,24,26,${(0.04+0.9*t).toFixed(3)})"><b style="color:${dark?'#fff':'var(--ink)'}">${k}</b><span style="color:${dark?'rgba(255,255,255,.75)':'var(--ash)'}">${c.toLocaleString()}</span></div>`; }).join('');
+  })();
 
   // ---- verdict ----
   const L = D.latest; const pL = pctRank(W, L.score); const gL = grade(pL);
@@ -561,7 +652,6 @@
 
   // ---- ledger ----
   const led = LEDGER.slice().reverse(); let shown=0; const tb=document.querySelector('#ledger tbody');
-  const ALLCAL = [].concat(...Object.values(D.by_year)).sort((a,b)=>a-b);  // every calibration score, all time
   function addRows(n){
     let html='';
     for(let i=shown;i<Math.min(shown+n,led.length);i++){ const r=led[i];
@@ -583,12 +673,12 @@
   const toRad = d=>d*Math.PI/180;
   function miles(a,b,c,d){ const R=3958.8; const dLat=toRad(c-a), dLng=toRad(d-b); const s=Math.sin(dLat/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(s)); }
   const median = arr => { const s=arr.slice().sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; };
-  let map=null, layer=null, meMarker=null, nearInited=false, center=null, centerLabel='', radiusMi=15, sortMode='dist', nearRows=[], nearShown=0, tilesOk=false, stateFilter=null;
+  let map=null, layer=null, meMarker=null, nearInited=false, center=null, centerLabel='', radiusMi=15, sortMode='dist', nearRows=[], nearShown=0, tilesOk=false, stateFilter=null, scoreFilter=null;
   const pinClass = s => s>=8.5?'hot':s>=8.0?'high':s>=7.5?'mid':'low';
   function nearInit(){
     if(nearInited){ if(map) map.invalidateSize(); return; }
     nearInited=true;
-    document.getElementById('locChips').innerHTML = ['Manhattan','Brooklyn','Boston','Philadelphia','Chicago','Miami','New Haven','Nantucket','New Jersey'].map(c=>`<button data-c="${c}">${c}</button>`).join('');
+    document.getElementById('locChips').innerHTML = ['9.0+','8.5+','Manhattan','Brooklyn','Boston','Philadelphia','Chicago','Miami','New Haven','New Jersey'].map(c=>`<button data-c="${c}">${c}</button>`).join('');
     document.getElementById('locChips').addEventListener('click',e=>{ if(e.target.dataset.c){ document.getElementById('locInput').value=e.target.dataset.c; searchPlace(e.target.dataset.c);} });
     document.getElementById('locGo').addEventListener('click',()=>searchPlace(document.getElementById('locInput').value));
     document.getElementById('locInput').addEventListener('keydown',e=>{ if(e.key==='Enter') searchPlace(e.target.value); });
@@ -613,25 +703,36 @@
   function useMyLocation(){
     const st=document.getElementById('locStatus'); st.textContent='locating…';
     if(!navigator.geolocation){ st.textContent='location unavailable here — type a city'; return; }
-    navigator.geolocation.getCurrentPosition(pos=>{ center=[pos.coords.latitude,pos.coords.longitude]; centerLabel='near you'; stateFilter=null; document.getElementById('radius').style.visibility='visible'; st.textContent=''; refreshNear(true); },
+    navigator.geolocation.getCurrentPosition(pos=>{ center=[pos.coords.latitude,pos.coords.longitude]; centerLabel='near you'; stateFilter=null; scoreFilter=null; document.getElementById('radius').style.visibility='visible'; st.textContent=''; refreshNear(true); },
       err=>{ st.textContent='location blocked here — type a city'; }, {timeout:8000, maximumAge:600000});
   }
   function searchPlace(q){
     q=(q||'').trim(); if(!q) return; const ql=q.toLowerCase(); const st=document.getElementById('locStatus');
+    // score query: "9.0" (exact) or "8.5+" (and up)
+    const sm = ql.match(/^(\d{1,2}(?:\.\d)?)(\+)?$/);
+    if(sm && +sm[1]<=10){
+      const v = Math.round(+sm[1]*10)/10, min = !!sm[2];
+      const hits = GEO.filter(r=> min ? r.score>=v-1e-9 : Math.abs(r.score-v)<1e-9);
+      if(!hits.length){ st.textContent = min ? `Nothing at ${fmt1(v)} or above` : `He has never given a ${fmt1(v)} — try “${fmt1(v)}+”`; return; }
+      st.textContent=''; scoreFilter={v, min}; stateFilter=null;
+      center=[median(hits.map(r=>r.lat)), median(hits.map(r=>r.lng))]; centerLabel=`at ${fmt1(v)}${min?'+':''}`;
+      document.getElementById('radius').style.visibility='hidden';
+      refreshNear(true); return;
+    }
     const stateName = STATES[ql] || Object.values(STATES).find(s=>s.toLowerCase()===ql);
     let hits;
     if(stateName){ hits=GEO.filter(r=>(r.state||'').toLowerCase()===stateName.toLowerCase()); }
     else { hits=GEO.filter(r=>(r.city||'').toLowerCase()===ql); if(!hits.length) hits=GEO.filter(r=>(r.city||'').toLowerCase().includes(ql) || (r.venue||'').toLowerCase().includes(ql)); }
-    if(!hits.length){ st.textContent=`No reviews match "${q}" — try a nearby city or a state`; return; }
-    st.textContent=''; center=[median(hits.map(r=>r.lat)), median(hits.map(r=>r.lng))]; centerLabel=stateName?('in '+stateName):('near '+q); stateFilter=stateName||null;
+    if(!hits.length){ st.textContent=`No reviews match "${q}" — try a score (9.0), a city, a state, or a venue name`; return; }
+    st.textContent=''; scoreFilter=null; center=[median(hits.map(r=>r.lat)), median(hits.map(r=>r.lng))]; centerLabel=stateName?('in '+stateName):('near '+q); stateFilter=stateName||null;
     document.getElementById('radius').style.visibility = stateFilter?'hidden':'visible';
     refreshNear(true);
   }
   function refreshNear(recenter){
     if(!center) return;
-    let rows = GEO.map(r=>({...r, dist:miles(center[0],center[1],r.lat,r.lng)})).filter(r=> stateFilter ? (r.state||'').toLowerCase()===stateFilter.toLowerCase() : r.dist<=radiusMi);
+    let rows = GEO.map(r=>({...r, dist:miles(center[0],center[1],r.lat,r.lng)})).filter(r=> scoreFilter ? (scoreFilter.min ? r.score>=scoreFilter.v-1e-9 : Math.abs(r.score-scoreFilter.v)<1e-9) : stateFilter ? (r.state||'').toLowerCase()===stateFilter.toLowerCase() : r.dist<=radiusMi);
     let autoNote='';
-    if(!stateFilter && rows.length<8){ const all=GEO.map(r=>({...r, dist:miles(center[0],center[1],r.lat,r.lng)})).sort((a,b)=>a.dist-b.dist); rows=all.slice(0,12); autoNote=` (nearest 12 — fewer than 8 within ${radiusMi} mi)`; }
+    if(!stateFilter && !scoreFilter && rows.length<8){ const all=GEO.map(r=>({...r, dist:miles(center[0],center[1],r.lat,r.lng)})).sort((a,b)=>a.dist-b.dist); rows=all.slice(0,12); autoNote=` (nearest 12 — fewer than 8 within ${radiusMi} mi)`; }
     rows.sort(sortMode==='dist'?(a,b)=>a.dist-b.dist:sortMode==='score'?(a,b)=>b.score-a.score||a.dist-b.dist:(a,b)=>b.date.localeCompare(a.date));
     nearRows=rows;
     const best = rows.slice().sort((a,b)=>b.score-a.score)[0];
