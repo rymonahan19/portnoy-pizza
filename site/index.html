@@ -133,6 +133,7 @@
   .tbar{display:flex;gap:10px}
   .tsave{font:700 13px var(--display);letter-spacing:.06em;text-transform:uppercase;background:var(--brick);color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px}
   .tclose{font:700 13px var(--display);letter-spacing:.06em;text-transform:uppercase;background:#fff;color:var(--ink);border:0;padding:10px 16px;border-radius:4px;cursor:pointer}
+  .tover .thint{font:11px var(--mono);color:#8A8F94;text-align:center;max-width:34ch;line-height:1.5}
   @media (max-width:640px){.dgrid{grid-template-columns:repeat(2,1fr)}}
   @media (max-width:420px){
     .grow{grid-template-columns:104px 1fr 50px;gap:10px}
@@ -219,10 +220,12 @@
   td.name{font-family:var(--body);font-size:13px;white-space:normal;text-align:left}
   td.name span{display:block;color:var(--ash);font-size:11px}
   td .s{font-family:var(--display);font-weight:700;font-size:18px}
-  td.brk{font-family:var(--display);font-weight:800;font-size:32px;line-height:1;letter-spacing:-.01em;color:var(--ink);text-align:left;white-space:nowrap;cursor:pointer;vertical-align:middle}
-  td.brk:hover{color:var(--brick)}
+  td.brk{font-family:var(--display);font-weight:800;font-size:32px;line-height:1;letter-spacing:-.01em;color:var(--ink);text-align:left;white-space:nowrap;vertical-align:middle}
   td.brk em{display:block;font:600 9px var(--mono);font-style:normal;letter-spacing:.06em;text-transform:uppercase;color:var(--ash);margin-top:3px}
   .rawnote{display:block;font:600 9px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ash);margin-top:2px}
+  td.scg{cursor:pointer}
+  td.scg .s{border-bottom:1px dotted var(--band-strong);padding-bottom:1px}
+  td.scg:hover .s{color:var(--brick);border-bottom-color:var(--brick)}
   .tmark{font-size:.42em;font-weight:700;color:var(--ash);vertical-align:super;line-height:0;margin-left:2px}
   @media (max-width:420px){td.brk{font-size:28px}td.brk em{font-size:8px}}
   td.tt{font-size:14px;font-weight:600}
@@ -438,7 +441,6 @@
         <div class="gtoggle" id="boardToggle" role="tablist"><button data-b="raw" class="on">Score</button><button data-b="adj">All-time adjusted</button></div>
       </div>
       <div class="tablewrap"><table id="board"><thead><tr><th title="Ties share a rank">Rank</th><th>Review</th><th id="boardScoreTh">Score</th></tr></thead><tbody></tbody></table></div>
-      <div class="detail" id="bdetail" hidden></div>
       <button class="more" id="moreBoard">Show 50 more</button>
       <p class="tr-note" id="boardNote"></p>
     </div>
@@ -467,6 +469,7 @@
     <p class="tr-note" style="margin:0 0 10px"><b>All-time rank</b> — where the review ranks by score against every review since 2013 (ties share a rank; protest scores excluded).<br><b>All-time %</b> — where the score ranks among every calibration score since 2013.<br><b>All-time adjusted</b> — the score's percentile within its own year, re-expressed across all time.</p>
     <div class="lsearch"><input id="ledgerSearch" type="search" placeholder="Find your local scores — city or state" aria-label="Search reviews by city or state"><button id="ledgerClear" hidden aria-label="Clear search">✕</button></div>
     <p class="tr-note" id="lsCount" style="margin:6px 0 8px"></p>
+    <p class="tr-note" style="margin:0 0 8px">Own one of these places? <b>Tap any score</b> for a shareable official score graphic.</p>
     <div class="tablewrap"><table id="ledger"><thead><tr><th>Review</th><th>Score</th><th title="Where this review ranks by score against every review since 2013 (protest scores excluded); ties share a rank">All-time<br>rank</th><th title="Where the score ranks among every calibration score since 2013">All-time %</th><th title="The score's percentile within its own year, re-expressed across every calibration score since 2013">All-time<br>adjusted</th></tr></thead><tbody></tbody></table></div>
     <button class="more" id="more">Show 50 more</button>
   </section>
@@ -764,18 +767,7 @@
       const fw=x.measureText('BUILD YOUR OWN SLIP AT ').width;
       x.fillStyle='#A6231A'; x.fillText('PORTNOY.PIZZA',80+fw,1700);
       x.fillStyle='#6B7075'; x.font='500 22px '+MONO; x.fillText('for fun · not a sportsbook',82,1746);
-      c.toBlob(async blob=>{
-        const file=new File([blob],'portnoy-pizza-slip.png',{type:'image/png'});
-        if(navigator.canShare && navigator.canShare({files:[file]})){
-          try{ await navigator.share({files:[file], title:'My portnoy.pizza slip'}); return; }catch(e){ if(e && e.name==='AbortError') return; }
-        }
-        // preview overlay with explicit save + close
-        const u=URL.createObjectURL(blob);
-        const ov=document.createElement('div'); ov.className='tover';
-        ov.innerHTML=`<div class="tbar"><a class="tsave" href="${u}" download="portnoy-pizza-slip.png">⬇ Save image</a><button class="tclose">✕ Close</button></div><img src="${u}" alt="Your bet slip">`;
-        document.body.appendChild(ov);
-        ov.addEventListener('click',e=>{ if(e.target===ov || e.target.closest('.tclose')){ ov.remove(); URL.revokeObjectURL(u); } });
-      },'image/png');
+      shareCanvas(c,'portnoy-pizza-slip.png','My portnoy.pizza slip');
     }
     el.addEventListener('click',e=>{
       const st=e.target.closest('.step');
@@ -806,6 +798,100 @@
     if(getComputedStyle(panel).position==='fixed') return;   // mobile bottom sheet is already on screen
     const r=panel.getBoundingClientRect();
     if(r.top<48 || r.top>window.innerHeight-160) window.scrollTo({top:window.scrollY+r.top-64, behavior:'smooth'});
+  }
+  function shareCanvas(c, filename, title){
+    c.toBlob(async blob=>{
+      const file=new File([blob],filename,{type:'image/png'});
+      const canShare = !!(navigator.canShare && navigator.canShare({files:[file]}));
+      const u=URL.createObjectURL(blob);
+      const ov=document.createElement('div'); ov.className='tover';
+      ov.innerHTML=`<div class="tbar">${canShare?'<button class="tsave" id="tShare">⬆ Save / share</button>':`<a class="tsave" href="${u}" download="${filename}">⬇ Save image</a>`}<button class="tclose">✕ Close</button></div><img src="${u}" alt="${title}"><div class="thint">${canShare?'Save to Photos, or post straight to your story.':'Right-click the image to copy, or use Save image.'}</div>`;
+      document.body.appendChild(ov);
+      const close=()=>{ ov.remove(); URL.revokeObjectURL(u); };
+      ov.addEventListener('click',async e=>{
+        if(e.target.closest('#tShare')){ try{ await navigator.share({files:[file], title}); }catch(err){} return; }
+        if(e.target===ov || e.target.closest('.tclose')) close();
+      });
+      // open the share sheet immediately on mobile so saving is one tap; overlay stays behind it
+      if(canShare){ try{ await navigator.share({files:[file], title}); }catch(err){} }
+    },'image/png');
+  }
+  // ---- official score card: a certificate-style IG story graphic for any review ----
+  function scoreCard(r, opts){
+    opts=opts||{}; const adj=!!opts.adjusted;
+    const val = adj ? opts.value : r.score;
+    const total = adj ? opts.total : RANK_TOTAL;
+    const c=document.createElement('canvas'); c.width=1080; c.height=1920; const x=c.getContext('2d');
+    const DISP='"Barlow Condensed","Arial Narrow",sans-serif', MONO='"IBM Plex Mono",Menlo,monospace';
+    const GOLD='#B08D3A', INK='#141518', CREAM='#EDEAE2', ASHD='#9BA0A6';
+    x.fillStyle=INK; x.fillRect(0,0,1080,1920);
+    // double gold frame
+    x.strokeStyle=GOLD; x.lineWidth=3; x.strokeRect(52,52,976,1816);
+    x.lineWidth=1; x.strokeRect(70,70,940,1780);
+    x.textAlign='center'; x.textBaseline='alphabetic';
+    const ls=v=>{ try{ x.letterSpacing=v; }catch(e){} };
+    // masthead
+    ls('7px'); x.fillStyle=ASHD; x.font='600 25px '+MONO; x.fillText('THE PORTNOY SCORE INDEX',540,228);
+    ls('10px'); x.fillStyle=GOLD; x.font='800 76px '+DISP; x.fillText('OFFICIAL SCORE',540,326);
+    ls('0px'); x.fillStyle=GOLD; x.fillRect(465,366,150,2);
+    // venue name — autofit up to two lines
+    const venue=(r.venue||'Venue record missing').toUpperCase();
+    let fs=90, lines=[venue];
+    const wrap=(txt,size)=>{ x.font='800 '+size+'px '+DISP; if(x.measureText(txt).width<=850) return [txt];
+      const w=txt.split(' '); for(let i=w.length-1;i>0;i--){ const a=w.slice(0,i).join(' '), b=w.slice(i).join(' '); if(x.measureText(a).width<=850&&x.measureText(b).width<=850) return [a,b]; } return null; };
+    while(fs>46){ const L=wrap(venue,fs); if(L){ lines=L; break; } fs-=6; }
+    x.fillStyle=CREAM; x.font='800 '+fs+'px '+DISP;
+    const vy=498, lineGap=fs+14;
+    lines.forEach((L,i)=>x.fillText(L,540,vy+i*lineGap,860));
+    const locY = vy + (lines.length-1)*lineGap + 58;
+    ls('1px'); x.fillStyle=ASHD; x.font='500 26px '+MONO;
+    x.fillText([ [r.city,r.state].filter(Boolean).join(', '), r.date ].filter(Boolean).join('   ·   '),540,locY);
+    ls('0px');
+    // designation when this is the era-adjusted figure
+    if(adj){ ls('5px'); x.fillStyle=GOLD; x.font='600 25px '+MONO; x.fillText('ALL-TIME ADJUSTED SCORE',540,650); ls('0px'); }
+    // grade chip — crowns the score
+    const g=grade(pctRank(W,val)).toUpperCase();
+    ls('3px'); x.font='700 38px '+DISP; const gw=x.measureText(g).width;
+    x.fillStyle='#A6231A'; x.fillRect(540-gw/2-32,700,gw+64,70);
+    x.fillStyle='#fff'; x.fillText(g,540+1.5,748); ls('0px');
+    // the score — the hero
+    x.fillStyle = val>=10 ? GOLD : '#FFFFFF';
+    x.font='800 410px '+DISP;
+    x.fillText(fmt1(val),540,1120);
+    x.fillStyle=GOLD; x.fillRect(430,1168,220,3);
+    if(adj && Math.abs(r.score-val)>=0.05){ ls('3px'); x.fillStyle=ASHD; x.font='500 24px '+MONO; x.fillText(`${fmt1(r.score)} UNADJUSTED`,540,1224); ls('0px'); }
+    // standing — rank leads, share of field supports
+    const rank = adj ? opts.rank : ((r.flags&1)?null:RANK_BY_SCORE.get(r.score));
+    if(rank!=null){
+      const pctTop=Math.max(0.1,Math.round(rank/total*1000)/10);
+      const rankTxt=`${adj?'ALL-TIME ADJUSTED RANK':'ALL-TIME RANK'} №${rank.toLocaleString()}`;
+      ls('2px'); x.fillStyle='#FFFFFF';
+      let rfs=72; do { x.font='800 '+rfs+'px '+DISP; if(x.measureText(rankTxt).width<=860) break; rfs-=4; } while(rfs>44);
+      x.fillText(rankTxt,540,1300);
+      // standalone callout, set apart from the rank line
+      ls('3px'); x.fillStyle=ASHD; x.font='500 22px '+MONO; x.fillText(adj?'ERA-ADJUSTED, EVERY SCORE SINCE 2013':'OUT OF EVERY SCORE SINCE 2013',540,1424);
+      ls('2px'); x.fillStyle=GOLD; x.font='800 112px '+DISP; x.fillText(`TOP ${pctTop}%`,540,1528);
+      ls('0px');
+    }
+    // footer wordmark + traffic driver
+    x.fillStyle='#3A3D42'; x.fillRect(390,1616,300,1);
+    x.font='800 62px '+DISP;
+    const w1=x.measureText('portnoy').width, w2=x.measureText('.').width, w3=x.measureText('pizza').width;
+    let fx=540-(w1+w2+w3)/2; x.textAlign='left';
+    x.fillStyle='#fff'; x.fillText('portnoy',fx,1716); fx+=w1;
+    x.fillStyle='#A6231A'; x.fillText('.',fx,1716); fx+=w2;
+    x.fillStyle='#fff'; x.fillText('pizza',fx,1716);
+    x.textAlign='center';
+    ls('4px'); x.fillStyle=ASHD; x.font='500 23px '+MONO; x.fillText('EVERY SCORE HE HAS EVER GIVEN — RANKED',540,1768); ls('0px');
+    x.fillStyle='#5C6166'; x.font='500 17px '+MONO; x.fillText('independent index · not affiliated with One Bite or Barstool Sports',540,1834);
+    shareCanvas(c,'portnoy-pizza-official-score.png',`${r.venue||'Official score'} · ${fmt1(r.score)}`);
+  }
+  const BY_ID=new Map(LEDGER.map(r=>[String(r.id),r]));
+  function wireScoreCards(sel){ const el=document.querySelector(sel); if(!el) return;
+    el.addEventListener('click',e=>{ const td=e.target.closest('td.scg'); if(!td) return; const r=BY_ID.get(td.dataset.rid); if(!r) return;
+      if(sel==='#board' && boardMode==='adj'){ const v=boardVal(r); scoreCard(r,{adjusted:true, value:v, rank:boardRank.get(v), total:boardRows.length}); }
+      else scoreCard(r);
+    });
   }
   function gPeriodRows(){
     const base = LEDGER.filter(r=>!(r.flags&1)&&!(r.flags&2));
@@ -1004,7 +1090,7 @@
     const u = url(r);
     const name = r.venue?(u?`<a href="${u}" target="_blank" rel="noopener">${r.venue}</a>`:r.venue):`<span class="muted">Venue record missing</span>`;
     const badges = (r.flags&1?'<span class="badge">protest</span>':'')+(r.flags&2?'<span class="badge grey">archival</span>':'')+(r.flags&4?'<span class="badge grey">unresolved</span>':'');
-    return `<tr><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td><td class="tt" title="${rank==null?'':'№'+rank+' of '+RANK_TOTAL.toLocaleString()}">${rank==null?'—':'№'+rank.toLocaleString()}</td><td>${ap==null?'—':ord(Math.round(ap))}</td><td class="tt">${alltime==null?'—':fmt1(alltime)}</td></tr>`;
+    return `<tr><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td class="scg" data-rid="${r.id}" role="button" tabindex="0" title="Tap for the official score graphic"><span class="s">${fmt1(r.score)}</span></td><td class="tt" title="${rank==null?'':'№'+rank+' of '+RANK_TOTAL.toLocaleString()}">${rank==null?'—':'№'+rank.toLocaleString()}</td><td>${ap==null?'—':ord(Math.round(ap))}</td><td class="tt">${alltime==null?'—':fmt1(alltime)}</td></tr>`;
   }
   function addRows(n){
     let html='';
@@ -1014,6 +1100,7 @@
     document.getElementById('more').textContent = `Show 50 more (${(led.length-shown).toLocaleString()} remaining)`;
   }
   document.getElementById('more').addEventListener('click',()=>addRows(50));
+  wireScoreCards('#ledger'); wireScoreCards('#board');
   // ---- find-your-local-store filter ----
   const lsInput=document.getElementById('ledgerSearch'), lsClear=document.getElementById('ledgerClear'), lsCount=document.getElementById('lsCount');
   if(lsInput){
@@ -1166,11 +1253,10 @@
     boardRank=new Map(); boardTied=new Map();
     boardRows.forEach((r,i)=>{ const v=boardVal(r); if(!boardRank.has(v)) boardRank.set(v,i+1); boardTied.set(v,(boardTied.get(v)||0)+1); });
     boardShown=0; document.querySelector('#board tbody').innerHTML='';
-    const bd=document.getElementById('bdetail'); if(bd){ bd.hidden=true; bd.innerHTML=''; }
     document.getElementById('boardScoreTh').textContent = boardMode==='raw'?'Score':'Adjusted';
     document.getElementById('boardNote').innerHTML = boardMode==='raw'
-      ? `Every review since 2013, ranked from №1 down to the lowest score he has ever given. A raised <b>T</b> after the number marks a tied place — <b>5</b><sup class="tmark">T</sup> means tied for 5th, a bare number means he holds that place alone. Tap any rank to see everyone sharing it. Protest scores are excluded.`
-      : `The same ${boardRows.length.toLocaleString()} reviews re-ranked by <b>all-time adjusted score</b> — each review's percentile within its own year, re-expressed across every score since 2013. It strips out era inflation: an 8.6 from a stingy year can outrank a 9.4 from a generous one, and the raw score is noted underneath wherever the two differ. Retro-logged 2013–15 reviews predate the calibration set, so they can't be era-adjusted and enter at their raw score, marked <span class="badge gold">archival</span>. Protest scores are excluded.`;
+      ? `Every review since 2013, ranked from №1 down to the lowest score he has ever given. A raised <b>T</b> after the number marks a tied place — <b>5</b><sup class="tmark">T</sup> means tied for 5th, a bare number means he holds that place alone. Tap any score for a shareable official score graphic. Protest scores are excluded.`
+      : `The same ${boardRows.length.toLocaleString()} reviews re-ranked by <b>all-time adjusted score</b> — each review's percentile within its own year, re-expressed across every score since 2013. It strips out era inflation: an 8.6 from a stingy year can outrank a 9.4 from a generous one, and the unadjusted score is noted underneath wherever the two differ. Retro-logged 2013–15 reviews predate the calibration set, so they can't be era-adjusted and enter at their unadjusted score, marked <span class="badge gold">archival</span>. Protest scores are excluded.`;
     boardAdd(50);
   }
   function boardRowHTML(r){
@@ -1179,8 +1265,8 @@
     const badges = (r.flags&2?'<span class="badge gold">archival</span>':'')+(r.flags&4?'<span class="badge grey">unresolved</span>':'');
     const v=boardVal(r), tied=boardTied.get(v)||1, rank=boardRank.get(v);
     const label = rank.toLocaleString() + (tied>1?'<sup class="tmark">T</sup>':'');
-    const raw = (boardMode==='adj' && Math.abs(r.score-v)>=0.05) ? `<span class="rawnote">${fmt1(r.score)} raw</span>` : '';
-    return `<tr><td class="brk${tied>1?' tie':''}" data-val="${v}" role="button" tabindex="0" title="${tied>1?tied+' reviews share this place — tap for the list':'Alone in this place — tap for detail'}">${label}${tied>1?`<em>${tied} tied</em>`:''}</td><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(v)}</span>${raw}</td></tr>`;
+    const raw = (boardMode==='adj' && Math.abs(r.score-v)>=0.05) ? `<span class="rawnote">${fmt1(r.score)} unadjusted score</span>` : '';
+    return `<tr><td class="brk${tied>1?' tie':''}" title="${tied>1?tied+' reviews share this place':'Alone in this place'}">${label}${tied>1?`<em>${tied} tied</em>`:''}</td><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td class="scg" data-rid="${r.id}" role="button" tabindex="0" title="Tap for the official score graphic"><span class="s">${fmt1(v)}</span>${raw}</td></tr>`;
   }
   function boardAdd(n){
     let html=''; for(let i=boardShown;i<Math.min(boardShown+n,boardRows.length);i++) html+=boardRowHTML(boardRows[i]);
@@ -1194,23 +1280,6 @@
     document.querySelectorAll('#boardToggle button').forEach(b=>b.classList.toggle('on',b===e.target));
     buildBoard();
   });
-  // tap a rank to see everyone sharing that place
-  (function(){ const bd=document.getElementById('bdetail'); let bOpen=null;
-    document.querySelector('#board').addEventListener('click',e=>{
-      const cell=e.target.closest('td.brk'); if(!cell) return;
-      const s=+cell.dataset.val;
-      if(bOpen===s){ bd.hidden=true; bd.innerHTML=''; bOpen=null; return; }
-      const rows=boardRows.filter(r=>Math.abs(boardVal(r)-s)<1e-9).sort((a,b)=>a.date.localeCompare(b.date));
-      const rank=boardRank.get(s), n=rows.length;
-      const place=`${ord(rank)} place`;
-      const unit=boardMode==='raw'?'':' adjusted';
-      const head = n>1
-        ? `${fmt1(s)}${unit} · ${place} · ${n} tied · next distinct rank ${ord(rank+n)}`
-        : `${fmt1(s)}${unit} · ${place} · alone · of ${boardRows.length.toLocaleString()} ranked`;
-      bd.innerHTML=detailHTML(head, rows); bd.hidden=false; bd.scrollTop=0; bOpen=s; ensureVisible(bd);
-    });
-    bd.addEventListener('click',e=>{ if(e.target.closest('.dclose')){ bd.hidden=true; bd.innerHTML=''; bOpen=null; } });
-  })();
   function lbTabRender(){
     const top = lbTab==='top';
     document.getElementById('lbTop').hidden = !top;
