@@ -2,6 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8Y33B1YDMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-8Y33B1YDMR');
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>portnoy.pizza — Is that a good Dave Portnoy pizza score? The Portnoy Score Index</title>
 <meta name="description" content="Every Dave Portnoy pizza score, ranked and era-adjusted. See where today's score sits in the last 12 months, what it would have been in any past year, scores near you, and the all-time leaderboard.">
@@ -12,7 +21,7 @@
 <meta property="og:url" content="https://portnoy.pizza/">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"portnoy.pizza — Portnoy Score Index","url":"https://portnoy.pizza/","description":"An independent index of Dave Portnoy's pizza review scores: percentile, era-adjusted equivalents, map, and all-time leaderboard.","potentialAction":{"@type":"SearchAction","target":"https://portnoy.pizza/#nearby?q={search_term_string}","query-input":"required name=search_term_string"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"portnoy.pizza — Portnoy Score Index","url":"https://portnoy.pizza/","description":"An independent index of Dave Portnoy's pizza review scores: percentile, era-adjusted equivalents, map, and all-time leaderboard.","potentialAction":{"@type":"SearchAction","target":"https://portnoy.pizza/search?q={search_term_string}","query-input":"required name=search_term_string"}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -350,6 +359,7 @@
     .card{grid-template-columns:56px 1fr auto}.card .cs{font-size:30px}
     .lb-head h1{font-size:38px}
   }
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   @media (prefers-reduced-motion:no-preference){ .verdict{animation:rise .5s ease-out both} @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}} }
 </style>
 </head>
@@ -360,11 +370,11 @@
     <div class="brand-sub">The Portnoy Score Index</div>
   </header>
   <nav class="tabs" id="tabs">
-    <a href="#reviews" data-view="reviews" class="active">Reviews</a>
-    <a href="#leaderboard" data-view="leaderboard">Leaderboard</a>
-    <a href="#index" data-view="index">The index</a>
-    <a href="#nearby" data-view="nearby">Search</a>
-    <a href="#grades" data-view="grades">Grade scale</a>
+    <a href="/" data-view="reviews" class="active">Reviews</a>
+    <a href="/leaderboard" data-view="leaderboard">Leaderboard</a>
+    <a href="/the-index" data-view="index">The index</a>
+    <a href="/search" data-view="nearby">Search</a>
+    <a href="/grade-scale" data-view="grades">Grade scale</a>
   </nav>
 
   <!-- ============ VIEW: INDEX ============ -->
@@ -455,6 +465,7 @@
 
   <!-- ============ VIEW: NEAR ME ============ -->
   <div class="view" id="view-nearby">
+  <h1 class="sr-only">Dave Portnoy pizza scores near you — search by city, state, ZIP or score</h1>
   <section>
     <h2>Search</h2>
     <p class="lede" style="margin-top:0;font-size:15px">Search every review by score, place, or venue name — or use your location.</p>
@@ -501,6 +512,7 @@
 
   <!-- ============ VIEW: ALL REVIEWS ============ -->
   <div class="view active" id="view-reviews">
+  <h1 class="sr-only">Every Dave Portnoy pizza score — the Portnoy Score Index</h1>
   <section>
     <h2>Betting board</h2>
     <button class="dashbar" id="dashToggle" aria-expanded="false" aria-controls="dash">
@@ -541,6 +553,7 @@
 
   <!-- ============ VIEW: GRADES GUIDE ============ -->
   <div class="view" id="view-grades">
+  <h1 class="sr-only">Dave Portnoy pizza score grade scale — what counts as a good score today</h1>
   <section>
     <h2>Grades</h2>
     <div class="gbar">
@@ -617,8 +630,16 @@
   // ---- tabs / routing ----
   const tabs = document.querySelectorAll('#tabs a');
   function show(view){ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+view)); tabs.forEach(t=>t.classList.toggle('active', t.dataset.view===view)); if(view==='nearby') setTimeout(nearInit,0); if(view==='leaderboard') lbInit(); try{window.scrollTo({top:0});}catch(e){} }
-  tabs.forEach(t=>t.addEventListener('click', e=>{ e.preventDefault(); history.replaceState(null,'','#'+t.dataset.view); show(t.dataset.view); }));
-  window.addEventListener('hashchange', ()=>{ const v=(location.hash||'#reviews').slice(1); if(['index','nearby','leaderboard','reviews','grades'].includes(v)) show(v); });
+  // ---- routing: each view is a real path (indexable); legacy #hash links still resolve ----
+  const VIEW_PATH={reviews:'/',leaderboard:'/leaderboard',index:'/the-index',nearby:'/search',grades:'/grade-scale'};
+  const PATH_VIEW=Object.fromEntries(Object.entries(VIEW_PATH).map(([v,p])=>[p,v]));
+  function viewFromLocation(){
+    const p=(location.pathname.replace(/\/+$/,'')||'/'); if(p!=='/' && PATH_VIEW[p]) return PATH_VIEW[p];
+    const h=(location.hash||'').slice(1).split('?')[0]; if(VIEW_PATH[h]) return h;   // legacy /#leaderboard style links
+    return 'reviews';
+  }
+  tabs.forEach(t=>t.addEventListener('click', e=>{ if(e.metaKey||e.ctrlKey||e.shiftKey||e.button===1) return; e.preventDefault(); const v=t.dataset.view; if(location.pathname!==VIEW_PATH[v]) history.pushState(null,'',VIEW_PATH[v]); show(v); }));
+  window.addEventListener('popstate', ()=>show(viewFromLocation()));
 
   // ---- header stamp ----
   const ago = STATUS && STATUS.checked_at ? Math.max(0, Math.round((Date.now()-new Date(STATUS.checked_at).getTime())/60000)) : null;
@@ -1012,20 +1033,20 @@
   })();
 
   // ---- verdict ----
-  const L = D.latest; const pL = pctRank(W, L.score); const gL = grade(pL);
+  const LT = D.latest; const pL = pctRank(W, LT.score); const gL = grade(pL);
   const eq19 = quantile(D.by_year[BASE], pL/100), eq17 = quantile(D.by_year["2017"], pL/100);
-  const higher = W.filter(v=>v>L.score+1e-9).length;
+  const higher = W.filter(v=>v>LT.score+1e-9).length;
   document.getElementById('verdict').innerHTML = `
-    <div class="eyebrow">Latest score · ${L.date}</div>
-    <div class="row"><div class="score">${fmt1(L.score)}</div>
-      <div class="venue">${L.venue||'Venue pending'}<span>${[L.city,L.state].filter(Boolean).join(', ')}</span></div></div>
+    <div class="eyebrow">Latest score · ${LT.date}</div>
+    <div class="row"><div class="score">${fmt1(LT.score)}</div>
+      <div class="venue">${LT.venue||'Venue pending'}<span>${[LT.city,LT.state].filter(Boolean).join(', ')}</span></div></div>
     <div class="grade">${gL}</div>
     <div class="facts">
       <div class="fact"><b>${Math.round(pL)}<span style="font-size:14px;color:#B9BDB6;text-transform:none;letter-spacing:0">${ord(Math.round(pL)).replace(/\d+/,'')}</span></b><span>percentile, last 12 mo</span></div>
       <div class="fact vhigher" role="button" tabindex="0" title="See the list"><b>${higher}</b><span>higher scores this year</span></div>
       <div class="fact"><b>${fmt1(eq19)}</b><span>in ${BASE} terms</span></div>
     </div>
-    <p class="line">${art(L.score)} ${fmt1(L.score)} right now beats ${Math.round(pL)}% of what he's scored in the past year (${W.length} reviews). At the same percentile, that's ${art(eq19).toLowerCase()} ${fmt1(eq19)} in ${BASE} and ${art(eq17).toLowerCase()} ${fmt1(eq17)} in 2017.</p>`;
+    <p class="line">${art(LT.score)} ${fmt1(LT.score)} right now beats ${Math.round(pL)}% of what he's scored in the past year (${W.length} reviews). At the same percentile, that's ${art(eq19).toLowerCase()} ${fmt1(eq19)} in ${BASE} and ${art(eq17).toLowerCase()} ${fmt1(eq17)} in 2017.</p>`;
   document.getElementById('verdict2').innerHTML = document.getElementById('verdict').innerHTML;  // same card atop All reviews
   // ---- PSA live numbers ----
   (function(){ const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
@@ -1035,7 +1056,7 @@
     set('psaN', D.counts.archive.toLocaleString());
     set('psaN2', D.counts.archive.toLocaleString());
   })();
-  document.getElementById('lede').innerHTML = `People hear <b>${fmt1(L.score)}</b> and expect a 9. He has given <b>${D.nines.by_year[years[years.length-1]]||0}</b> nines this year and <b>${D.regime.count_ge_9}</b> in the last twelve months. Under his current scale, ${art(L.score).toLowerCase()} ${fmt1(L.score)} is ${gL.toLowerCase()==='elite'||gL.toLowerCase()==='rarefied air'?'not a letdown. It is the top of the board.':'exactly what it says.'}`;
+  document.getElementById('lede').innerHTML = `People hear <b>${fmt1(LT.score)}</b> and expect a 9. He has given <b>${D.nines.by_year[years[years.length-1]]||0}</b> nines this year and <b>${D.regime.count_ge_9}</b> in the last twelve months. Under his current scale, ${art(LT.score).toLowerCase()} ${fmt1(LT.score)} is ${gL.toLowerCase()==='elite'||gL.toLowerCase()==='rarefied air'?'not a letdown. It is the top of the board.':'exactly what it says.'}`;
 
   // ---- translator ----
   const inp = document.getElementById('scoreInput'), rng = document.getElementById('scoreRange');
@@ -1070,7 +1091,7 @@
   rng.addEventListener('input', e=>render(xs(+e.target.value)));
   inp.addEventListener('input', e=>{ const v = parseFloat(e.target.value); if(!isNaN(v)) render(v); });
   inp.addEventListener('blur', e=>render(e.target.value));
-  document.getElementById('quick').innerHTML = [6.5,7.0,7.5,8.0,8.5,9.0,L.score].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b).map(v=>`<button data-v="${v}">${fmt1(v)}${v===L.score?' · latest':''}</button>`).join('');
+  document.getElementById('quick').innerHTML = [6.5,7.0,7.5,8.0,8.5,9.0,LT.score].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b).map(v=>`<button data-v="${v}">${fmt1(v)}${v===LT.score?' · latest':''}</button>`).join('');
   document.getElementById('quick').addEventListener('click', e=>{ if(e.target.dataset.v) render(e.target.dataset.v); });
   drawRail(); render(8.0);
 
@@ -1208,8 +1229,10 @@
     } else {
       document.getElementById('mapnote').textContent='';
     }
-    // default: Manhattan
-    searchPlace('Manhattan');
+    // default: ?q= from the URL (SearchAction / shared links), else Manhattan
+    const q0=new URLSearchParams(location.search).get('q');
+    if(q0){ const li=document.getElementById('locInput'); if(li) li.value=q0; }
+    searchPlace(q0||'Manhattan');
     // try silent geolocation if permitted
     if(navigator.permissions && navigator.permissions.query){ navigator.permissions.query({name:'geolocation'}).then(p=>{ if(p.state==='granted') useMyLocation(); }).catch(()=>{}); }
   }
@@ -1370,7 +1393,9 @@
   }
 
   // initial route
-  const v0=(location.hash||'#reviews').slice(1); if(['index','nearby','leaderboard','grades'].includes(v0)) show(v0);
+  const v0=viewFromLocation();
+  if(location.hash && VIEW_PATH[location.hash.slice(1).split('?')[0]] && location.pathname!==VIEW_PATH[v0]) history.replaceState(null,'',VIEW_PATH[v0]+location.search);  // upgrade legacy #view links to real paths
+  if(v0!=='reviews') show(v0);
 })();
 </script>
 </body>
