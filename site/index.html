@@ -160,6 +160,34 @@
   h2::after{content:"";flex:1;height:1px;background:var(--line)}
   p.lede{margin:14px 0 0;color:var(--ink);font-size:16px}
   .muted{color:var(--ash)}
+  /* public service announcement */
+  .psa{background:var(--ink);color:#fff;border-radius:6px;padding:26px 22px 22px;position:relative;overflow:hidden}
+  .psa::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--brick)}
+  .psa-eyebrow{font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+  .psa-head{font-family:var(--display);font-weight:800;font-size:clamp(34px,7vw,58px);line-height:1;letter-spacing:-.01em;margin:12px 0 0}
+  .psa-head em{font-style:normal;color:var(--brick);}
+  .psa-lede{font-size:15px;line-height:1.6;color:#E9EBE6;margin:16px 0 0;max-width:62ch}
+  .psa-lede b{color:#fff;font-weight:600}
+  .psa-lede i{color:#B9BDB6}
+  .psa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}
+  .psa-card{background:rgba(255,255,255,.05);border:1px solid #35383B;border-radius:5px;padding:14px 13px 12px}
+  .psa-card .n{font:700 11px var(--mono);letter-spacing:.1em;color:var(--gold)}
+  .psa-card b{display:block;font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.02em;margin:6px 0 6px}
+  .psa-card p{margin:0;font-size:13px;line-height:1.55;color:#B9BDB6}
+  .psa-card p b{display:inline;font-family:var(--mono);font-size:13px;color:#fff}
+  .psa-vid{display:grid;grid-template-columns:270px 1fr;gap:18px;align-items:center;margin-top:22px;padding-top:20px;border-top:1px solid #35383B}
+  .psa-frame{position:relative;width:100%;aspect-ratio:9/16;border-radius:6px;overflow:hidden;background:#000;border:1px solid #35383B}
+  .psa-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .psa-vcap .tag{display:inline-block;font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);background:var(--gold);padding:3px 8px;border-radius:2px}
+  .psa-vcap p{font-size:14px;line-height:1.6;color:#B9BDB6;margin:10px 0 0}
+  .psa-vcap p b{color:#fff;font-weight:600}
+  .psa-sign{font-family:var(--mono);font-size:11.5px;color:#8A8F94;border-left:2px solid var(--brick);padding-left:10px}
+  @media (max-width:640px){
+    .psa{padding:22px 16px 18px}
+    .psa-grid{grid-template-columns:1fr}
+    .psa-vid{grid-template-columns:1fr;gap:14px}
+    .psa-frame{max-width:260px;margin:0 auto}
+  }
   /* verdict */
   .verdict{background:var(--ink);color:#fff;border-radius:6px;padding:20px 20px 18px;position:relative;overflow:hidden}
   .verdict .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#B9BDB6}
@@ -336,7 +364,25 @@
   <!-- ============ VIEW: INDEX ============ -->
   <div class="view" id="view-index">
   <section>
-    <div class="verdict" id="verdict"></div>
+    <div class="psa">
+      <div class="psa-eyebrow">A public service announcement</div>
+      <h1 class="psa-head">You heard 8.3.<br>You felt heartbreak.<br>You were <em>wrong</em>.</h1>
+      <p class="psa-lede">Somewhere right now a pizzeria owner is staring at a number, googling <i>“is 8.3 good”</i>, and quietly spiraling. This index exists to end that. School taught you 83% is a B-minus. Pizza is not school. On his current scale an 8.3 beats <b id="psa83">—</b> of everything he has scored in the past year. You are not mid. Please call your mother.</p>
+      <div class="psa-grid">
+        <div class="psa-card"><span class="n">01</span><b>The problem</b><p>One number, no context, delivered on a sidewalk to a man holding a paper plate. Nobody has ever known what it means. Not the owner, not the customer, not the guy who drove ninety minutes on the strength of it.</p></div>
+        <div class="psa-card"><span class="n">02</span><b>Pizza-flation</b><p>A 7.2 in 2016 and a 7.2 today are not the same pizza. His floor has climbed from <b id="psaFloor">—</b> to <b id="psaFloorNow">—</b> while the ceiling never moved. Your score is competing against a completely different field than it used to. Nobody adjusted for this. We did.</p></div>
+        <div class="psa-card"><span class="n">03</span><b>The fix</b><p>All <b id="psaN">—</b> reviews, ranked, era-adjusted, and translated into the only thing that actually matters: where your score truly stands. Then we build you a graphic to post about it.</p></div>
+      </div>
+      <div class="psa-vid">
+        <div class="psa-frame"><iframe src="https://www.youtube.com/embed/C8Jd40DspMU" title="One Bite reaction" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+        <div class="psa-vcap">
+          <span class="tag">Exhibit A</span>
+          <p>This is what an unexplained number does to a person. Every one of these is preventable. A score is not a verdict — it is a position in a field of <b id="psaN2">—</b>, and the field has been getting easier for a decade.</p>
+          <p class="psa-sign">The Portnoy Score Index — doing the math nobody asked for, on behalf of pizza.</p>
+        </div>
+      </div>
+    </div>
+    <div class="verdict" id="verdict" hidden></div>
     <div class="detail" id="vdetail" hidden></div>
     <p class="lede" id="lede"></p>
   </section>
@@ -975,6 +1021,14 @@
     </div>
     <p class="line">${art(L.score)} ${fmt1(L.score)} right now beats ${Math.round(pL)}% of what he's scored in the past year (${W.length} reviews). At the same percentile, that's ${art(eq19).toLowerCase()} ${fmt1(eq19)} in ${BASE} and ${art(eq17).toLowerCase()} ${fmt1(eq17)} in 2017.</p>`;
   document.getElementById('verdict2').innerHTML = document.getElementById('verdict').innerHTML;  // same card atop All reviews
+  // ---- PSA live numbers ----
+  (function(){ const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+    set('psa83', Math.round(pctRank(W,8.3))+'%');
+    const ys=Object.keys(D.year_stats).sort(), y0=D.year_stats[ys[0]], y1=D.year_stats[ys[ys.length-1]];
+    if(y0&&y1){ set('psaFloor', fmt1(y0.p10!=null?y0.p10:y0.min)); set('psaFloorNow', fmt1(y1.p10!=null?y1.p10:y1.min)); }
+    set('psaN', D.counts.archive.toLocaleString());
+    set('psaN2', D.counts.archive.toLocaleString());
+  })();
   document.getElementById('lede').innerHTML = `People hear <b>${fmt1(L.score)}</b> and expect a 9. He has given <b>${D.nines.by_year[years[years.length-1]]||0}</b> nines this year and <b>${D.regime.count_ge_9}</b> in the last twelve months. Under his current scale, ${art(L.score).toLowerCase()} ${fmt1(L.score)} is ${gL.toLowerCase()==='elite'||gL.toLowerCase()==='rarefied air'?'not a letdown. It is the top of the board.':'exactly what it says.'}`;
 
   // ---- translator ----
