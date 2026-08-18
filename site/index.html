@@ -219,8 +219,12 @@
   td.name{font-family:var(--body);font-size:13px;white-space:normal;text-align:left}
   td.name span{display:block;color:var(--ash);font-size:11px}
   td .s{font-family:var(--display);font-weight:700;font-size:18px}
-  td.brk{font-family:var(--display);font-weight:800;font-size:32px;line-height:1;letter-spacing:-.01em;color:var(--ink);text-align:left;white-space:nowrap}
-  @media (max-width:420px){td.brk{font-size:28px}}
+  td.brk{font-family:var(--display);font-weight:800;font-size:32px;line-height:1;letter-spacing:-.01em;color:var(--ink);text-align:left;white-space:nowrap;cursor:pointer;vertical-align:middle}
+  td.brk:hover{color:var(--brick)}
+  td.brk em{display:block;font:600 9px var(--mono);font-style:normal;letter-spacing:.06em;text-transform:uppercase;color:var(--ash);margin-top:3px}
+  .rawnote{display:block;font:600 9px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ash);margin-top:2px}
+  .tmark{font-size:.42em;font-weight:700;color:var(--ash);vertical-align:super;line-height:0;margin-left:2px}
+  @media (max-width:420px){td.brk{font-size:28px}td.brk em{font-size:8px}}
   td.tt{font-size:14px;font-weight:600}
   .badge{display:inline-block;font:600 9px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:2px 5px;border-radius:2px;background:var(--brick-soft);color:var(--brick);margin-left:6px;vertical-align:1px}
   .badge.grey{background:#E4E6E0;color:var(--ash)}
@@ -430,9 +434,13 @@
       <p class="tr-note" id="lbNote"></p>
     </div>
     <div id="lbBoard" hidden>
-      <div class="tablewrap" style="margin-top:14px"><table id="board"><thead><tr><th title="Ties share a rank">Rank</th><th>Review</th><th>Score</th></tr></thead><tbody></tbody></table></div>
+      <div class="gbar" style="margin-top:14px;justify-content:flex-end">
+        <div class="gtoggle" id="boardToggle" role="tablist"><button data-b="raw" class="on">Score</button><button data-b="adj">All-time adjusted</button></div>
+      </div>
+      <div class="tablewrap"><table id="board"><thead><tr><th title="Ties share a rank">Rank</th><th>Review</th><th id="boardScoreTh">Score</th></tr></thead><tbody></tbody></table></div>
+      <div class="detail" id="bdetail" hidden></div>
       <button class="more" id="moreBoard">Show 50 more</button>
-      <p class="tr-note">Every review since 2013, ranked from №1 down to the lowest score he has ever given. Ties share a rank; earlier review listed first. Protest scores are excluded.</p>
+      <p class="tr-note" id="boardNote"></p>
     </div>
   </section>
   </div>
@@ -987,6 +995,9 @@
   const RANK_BY_SCORE = (()=>{ const m=new Map(); const scores=LEDGER.filter(r=>!(r.flags&1)).map(r=>r.score).sort((a,b)=>b-a);
     scores.forEach((s,i)=>{ if(!m.has(s)) m.set(s,i+1); }); return m; })();
   const RANK_TOTAL = LEDGER.filter(r=>!(r.flags&1)).length;
+  // how many reviews share each score — drives the golf-style T (tied) prefix
+  const TIED_AT = (()=>{ const m=new Map(); for(const r of LEDGER) if(!(r.flags&1)) m.set(r.score,(m.get(r.score)||0)+1); return m; })();
+  const rankLabel = s => RANK_BY_SCORE.get(s).toLocaleString() + (TIED_AT.get(s)>1?'<sup class="tmark">T</sup>':'');
   function rowHTML(r){
     const excluded = (r.flags&1)||(r.flags&2); const p = excluded?null:pctInYear(r.date,r.score); const ap = excluded?null:pctRank(ALLCAL,r.score); const alltime = p==null?null:quantile(ALLCAL,p/100);
     const rank = (r.flags&1)?null:RANK_BY_SCORE.get(r.score);
@@ -1142,13 +1153,34 @@
     lbRender();
   }
   // ---- score board: every review ranked №1 → lowest (same competition ranking as the ledger) ----
-  const boardRows = LEDGER.filter(r=>!(r.flags&1)).slice().sort((a,b)=>b.score-a.score||a.date.localeCompare(b.date));
-  let boardShown=0;
+  // adjusted score: the review's percentile within its own year, re-expressed across all time
+  // Era-adjusted where we can compute it; reviews predating the calibration set (retro-logged 2013–15)
+  // have no year percentile to re-express, so they enter at their raw score rather than dropping off the board.
+  const adjOf = r => { if(r.flags&1) return null; const p=pctInYear(r.date,r.score); return p==null?r.score:quantile(ALLCAL,p/100); };
+  let boardMode='raw', boardRows=[], boardRank=new Map(), boardTied=new Map(), boardShown=0;
+  const boardVal = r => boardMode==='raw' ? r.score : r._adj;
+  function buildBoard(){
+    if(boardMode==='adj' && LEDGER[0]._adj===undefined) for(const r of LEDGER) r._adj=adjOf(r);
+    boardRows = LEDGER.filter(r=>!(r.flags&1) && (boardMode==='raw' || r._adj!=null))
+      .slice().sort((a,b)=>boardVal(b)-boardVal(a)||a.date.localeCompare(b.date));
+    boardRank=new Map(); boardTied=new Map();
+    boardRows.forEach((r,i)=>{ const v=boardVal(r); if(!boardRank.has(v)) boardRank.set(v,i+1); boardTied.set(v,(boardTied.get(v)||0)+1); });
+    boardShown=0; document.querySelector('#board tbody').innerHTML='';
+    const bd=document.getElementById('bdetail'); if(bd){ bd.hidden=true; bd.innerHTML=''; }
+    document.getElementById('boardScoreTh').textContent = boardMode==='raw'?'Score':'Adjusted';
+    document.getElementById('boardNote').innerHTML = boardMode==='raw'
+      ? `Every review since 2013, ranked from №1 down to the lowest score he has ever given. A raised <b>T</b> after the number marks a tied place — <b>5</b><sup class="tmark">T</sup> means tied for 5th, a bare number means he holds that place alone. Tap any rank to see everyone sharing it. Protest scores are excluded.`
+      : `The same ${boardRows.length.toLocaleString()} reviews re-ranked by <b>all-time adjusted score</b> — each review's percentile within its own year, re-expressed across every score since 2013. It strips out era inflation: an 8.6 from a stingy year can outrank a 9.4 from a generous one, and the raw score is noted underneath wherever the two differ. Retro-logged 2013–15 reviews predate the calibration set, so they can't be era-adjusted and enter at their raw score, marked <span class="badge gold">archival</span>. Protest scores are excluded.`;
+    boardAdd(50);
+  }
   function boardRowHTML(r){
     const u=url(r);
     const name = r.venue?(u?`<a href="${u}" target="_blank" rel="noopener">${r.venue}</a>`:r.venue):`<span class="muted">Venue record missing</span>`;
     const badges = (r.flags&2?'<span class="badge gold">archival</span>':'')+(r.flags&4?'<span class="badge grey">unresolved</span>':'');
-    return `<tr><td class="brk">${RANK_BY_SCORE.get(r.score).toLocaleString()}</td><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td></tr>`;
+    const v=boardVal(r), tied=boardTied.get(v)||1, rank=boardRank.get(v);
+    const label = rank.toLocaleString() + (tied>1?'<sup class="tmark">T</sup>':'');
+    const raw = (boardMode==='adj' && Math.abs(r.score-v)>=0.05) ? `<span class="rawnote">${fmt1(r.score)} raw</span>` : '';
+    return `<tr><td class="brk${tied>1?' tie':''}" data-val="${v}" role="button" tabindex="0" title="${tied>1?tied+' reviews share this place — tap for the list':'Alone in this place — tap for detail'}">${label}${tied>1?`<em>${tied} tied</em>`:''}</td><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(v)}</span>${raw}</td></tr>`;
   }
   function boardAdd(n){
     let html=''; for(let i=boardShown;i<Math.min(boardShown+n,boardRows.length);i++) html+=boardRowHTML(boardRows[i]);
@@ -1157,13 +1189,35 @@
     mb.style.display = boardShown>=boardRows.length?'none':'block';
     mb.textContent = `Show 50 more (${(boardRows.length-boardShown).toLocaleString()} remaining)`;
   }
+  document.getElementById('boardToggle').addEventListener('click',e=>{ if(!e.target.dataset.b) return;
+    boardMode=e.target.dataset.b;
+    document.querySelectorAll('#boardToggle button').forEach(b=>b.classList.toggle('on',b===e.target));
+    buildBoard();
+  });
+  // tap a rank to see everyone sharing that place
+  (function(){ const bd=document.getElementById('bdetail'); let bOpen=null;
+    document.querySelector('#board').addEventListener('click',e=>{
+      const cell=e.target.closest('td.brk'); if(!cell) return;
+      const s=+cell.dataset.val;
+      if(bOpen===s){ bd.hidden=true; bd.innerHTML=''; bOpen=null; return; }
+      const rows=boardRows.filter(r=>Math.abs(boardVal(r)-s)<1e-9).sort((a,b)=>a.date.localeCompare(b.date));
+      const rank=boardRank.get(s), n=rows.length;
+      const place=`${ord(rank)} place`;
+      const unit=boardMode==='raw'?'':' adjusted';
+      const head = n>1
+        ? `${fmt1(s)}${unit} · ${place} · ${n} tied · next distinct rank ${ord(rank+n)}`
+        : `${fmt1(s)}${unit} · ${place} · alone · of ${boardRows.length.toLocaleString()} ranked`;
+      bd.innerHTML=detailHTML(head, rows); bd.hidden=false; bd.scrollTop=0; bOpen=s; ensureVisible(bd);
+    });
+    bd.addEventListener('click',e=>{ if(e.target.closest('.dclose')){ bd.hidden=true; bd.innerHTML=''; bOpen=null; } });
+  })();
   function lbTabRender(){
     const top = lbTab==='top';
     document.getElementById('lbTop').hidden = !top;
     document.getElementById('lbBoard').hidden = top;
     document.querySelector('.lb-toggle').style.display = top?'':'none';
     document.getElementById('lbTitle').innerHTML = top ? 'The highest scores<br>he has ever given.' : 'Every score,<br>№1 to the lowest.';
-    if(!top && !boardShown) boardAdd(50);
+    if(!top && !boardShown) buildBoard();
   }
   function zFor(r){ const y=r.date.slice(0,4); const s=D.year_stats[y] || D.year_stats[years[0]]; return (r.score - s.mean)/s.sd; }
   function lbRender(){
