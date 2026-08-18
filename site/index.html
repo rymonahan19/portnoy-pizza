@@ -487,7 +487,7 @@
   <!-- ============ VIEW: LEADERBOARD ============ -->
   <div class="view" id="view-leaderboard">
   <section>
-    <div class="lb-tabs" role="tablist"><button data-t="top" class="on">Highest scores</button><button data-t="board">Score board</button></div>
+    <div class="lb-tabs" role="tablist"><button data-t="top" class="on">Highest scores</button><button data-t="board">Scoreboard</button></div>
     <div class="lb-head">
       <div class="eyebrow">All-time leaderboard</div>
       <h1 id="lbTitle">The highest scores<br>he has ever given.</h1>
@@ -1321,7 +1321,7 @@
     document.getElementById('moreBoard').addEventListener('click',()=>boardAdd(50));
     lbRender();
   }
-  // ---- score board: every review ranked №1 → lowest (same competition ranking as the ledger) ----
+  // ---- scoreboard: every review ranked №1 → lowest (same competition ranking as the ledger) ----
   // adjusted score: the review's percentile within its own year, re-expressed across all time
   // Era-adjusted where we can compute it; reviews predating the calibration set (retro-logged 2013–15)
   // have no year percentile to re-express, so they enter at their raw score rather than dropping off the board.
