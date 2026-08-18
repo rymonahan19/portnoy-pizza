@@ -847,8 +847,8 @@
     ls('1px'); x.fillStyle=ASHD; x.font='500 26px '+MONO;
     x.fillText([ [r.city,r.state].filter(Boolean).join(', '), r.date ].filter(Boolean).join('   ·   '),540,locY);
     ls('0px');
-    // designation when this is the era-adjusted figure
-    if(adj){ ls('5px'); x.fillStyle=GOLD; x.font='600 25px '+MONO; x.fillText('ALL-TIME ADJUSTED SCORE',540,650); ls('0px'); }
+    // designation when this is the era-adjusted figure — stated once, here
+    if(adj){ ls('5px'); x.fillStyle=GOLD; x.font='600 25px '+MONO; x.fillText('ALL-TIME ADJUSTED',540,650); ls('0px'); }
     // grade chip — crowns the score
     const g=grade(pctRank(W,val)).toUpperCase();
     ls('3px'); x.font='700 38px '+DISP; const gw=x.measureText(g).width;
@@ -864,25 +864,24 @@
     const rank = adj ? opts.rank : ((r.flags&1)?null:RANK_BY_SCORE.get(r.score));
     if(rank!=null){
       const pctTop=Math.max(0.1,Math.round(rank/total*1000)/10);
-      const rankTxt=`${adj?'ALL-TIME ADJUSTED RANK':'ALL-TIME RANK'} №${rank.toLocaleString()}`;
+      const rankTxt=`${adj?'':'ALL-TIME '}RANK №${rank.toLocaleString()} OF ${total.toLocaleString()}`;
       ls('2px'); x.fillStyle='#FFFFFF';
       let rfs=72; do { x.font='800 '+rfs+'px '+DISP; if(x.measureText(rankTxt).width<=860) break; rfs-=4; } while(rfs>44);
-      x.fillText(rankTxt,540,1300);
-      // standalone callout, set apart from the rank line
-      ls('3px'); x.fillStyle=ASHD; x.font='500 22px '+MONO; x.fillText(adj?'ERA-ADJUSTED, EVERY SCORE SINCE 2013':'OUT OF EVERY SCORE SINCE 2013',540,1424);
-      ls('2px'); x.fillStyle=GOLD; x.font='800 112px '+DISP; x.fillText(`TOP ${pctTop}%`,540,1528);
+      x.fillText(rankTxt,540,1332);
+      // standalone callout — the rank line above already gives it context
+      ls('2px'); x.fillStyle=GOLD; x.font='800 112px '+DISP; x.fillText(`TOP ${pctTop}%`,540,1486);
       ls('0px');
     }
     // footer wordmark + traffic driver
-    x.fillStyle='#3A3D42'; x.fillRect(390,1616,300,1);
-    x.font='800 62px '+DISP;
+    x.fillStyle='#3A3D42'; x.fillRect(430,1622,220,1);
+    ls('4px'); x.fillStyle=ASHD; x.font='500 23px '+MONO; x.fillText('FIND YOUR SCORE AT',540,1690); ls('0px');
+    x.font='800 68px '+DISP;
     const w1=x.measureText('portnoy').width, w2=x.measureText('.').width, w3=x.measureText('pizza').width;
     let fx=540-(w1+w2+w3)/2; x.textAlign='left';
-    x.fillStyle='#fff'; x.fillText('portnoy',fx,1716); fx+=w1;
-    x.fillStyle='#A6231A'; x.fillText('.',fx,1716); fx+=w2;
-    x.fillStyle='#fff'; x.fillText('pizza',fx,1716);
+    x.fillStyle='#fff'; x.fillText('portnoy',fx,1770); fx+=w1;
+    x.fillStyle='#A6231A'; x.fillText('.',fx,1770); fx+=w2;
+    x.fillStyle='#fff'; x.fillText('pizza',fx,1770);
     x.textAlign='center';
-    ls('4px'); x.fillStyle=ASHD; x.font='500 23px '+MONO; x.fillText('EVERY SCORE HE HAS EVER GIVEN — RANKED',540,1768); ls('0px');
     x.fillStyle='#5C6166'; x.font='500 17px '+MONO; x.fillText('independent index · not affiliated with One Bite or Barstool Sports',540,1834);
     shareCanvas(c,'portnoy-pizza-official-score.png',`${r.venue||'Official score'} · ${fmt1(r.score)}`);
   }
