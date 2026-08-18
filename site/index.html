@@ -219,6 +219,8 @@
   td.name{font-family:var(--body);font-size:13px;white-space:normal;text-align:left}
   td.name span{display:block;color:var(--ash);font-size:11px}
   td .s{font-family:var(--display);font-weight:700;font-size:18px}
+  td.brk{font-family:var(--display);font-weight:800;font-size:32px;line-height:1;letter-spacing:-.01em;color:var(--ink);text-align:left;white-space:nowrap}
+  @media (max-width:420px){td.brk{font-size:28px}}
   td.tt{font-size:14px;font-weight:600}
   .badge{display:inline-block;font:600 9px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:2px 5px;border-radius:2px;background:var(--brick-soft);color:var(--brick);margin-left:6px;vertical-align:1px}
   .badge.grey{background:#E4E6E0;color:var(--ash)}
@@ -1146,7 +1148,7 @@
     const u=url(r);
     const name = r.venue?(u?`<a href="${u}" target="_blank" rel="noopener">${r.venue}</a>`:r.venue):`<span class="muted">Venue record missing</span>`;
     const badges = (r.flags&2?'<span class="badge gold">archival</span>':'')+(r.flags&4?'<span class="badge grey">unresolved</span>':'');
-    return `<tr><td class="tt">№${RANK_BY_SCORE.get(r.score).toLocaleString()}</td><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td></tr>`;
+    return `<tr><td class="brk">${RANK_BY_SCORE.get(r.score).toLocaleString()}</td><td class="name">${name}${badges}<span>${[r.city,r.state].filter(Boolean).join(', ')}${r.city||r.state?' · ':''}${r.date}</span></td><td><span class="s">${fmt1(r.score)}</span></td></tr>`;
   }
   function boardAdd(n){
     let html=''; for(let i=boardShown;i<Math.min(boardShown+n,boardRows.length);i++) html+=boardRowHTML(boardRows[i]);
