@@ -1,0 +1,33 @@
+name: Daily repository heartbeat
+
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update heartbeat timestamp
+        run: date -u +'%Y-%m-%dT%H:%M:%SZ' > heartbeat.txt
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet -- heartbeat.txt; then
+            echo "Heartbeat timestamp is unchanged; skipping commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add heartbeat.txt
+          git commit -m "chore: update daily heartbeat"
+          git push origin HEAD:main
